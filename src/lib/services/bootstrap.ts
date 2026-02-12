@@ -9,6 +9,8 @@ import { devlink3Service } from '@/lib/devlink3';
 import type { DevLink3ServiceConfig } from '@/lib/devlink3';
 import { smdrListener } from '@/lib/smdr/listener';
 import type { SmdrListenerConfig } from '@/lib/smdr/listener';
+import { smdrWriter } from '@/lib/smdr/writer';
+import { correlationEngine } from '@/lib/correlation/engine';
 import { ingestionService } from '@/lib/recordings/ingestion';
 import type { IngestionConfig } from '@/lib/recordings/ingestion';
 import { reportScheduler } from '@/lib/reports/scheduler';
@@ -124,6 +126,20 @@ export async function startBackgroundServices(config: BootstrapConfig = {}): Pro
     });
   }
 
+  // ── 2b. SMDR Writer (Redis -> DB + correlation channel) ────────────────
+  if (!skip.has('smdr-writer')) {
+    await startService('smdr-writer', async () => {
+      await smdrWriter.start({ redisUrl });
+    });
+  }
+
+  // ── 2c. Correlation Engine (DevLink3 + SMDR matching) ────────────────
+  if (!skip.has('correlation')) {
+    await startService('correlation', async () => {
+      await correlationEngine.start(redisUrl);
+    });
+  }
+
   // ── 3. Recording Ingestion ─────────────────────────────────────────────
   if (!skip.has('ingestion')) {
     await startService('ingestion', async () => {
@@ -184,6 +200,8 @@ export async function stopBackgroundServices(): Promise<void> {
     { name: 'alerts', stop: () => alertEngine.stop() },
     { name: 'scheduler', stop: () => reportScheduler.stopAll() },
     { name: 'ingestion', stop: () => ingestionService.stop() },
+    { name: 'correlation', stop: () => correlationEngine.stop() },
+    { name: 'smdr-writer', stop: () => smdrWriter.stop() },
     { name: 'smdr', stop: () => smdrListener.stop() },
     { name: 'devlink3', stop: () => devlink3Service.stop() },
     { name: 'pci-timers', stop: () => { clearAllAutoResumeTimers(); return Promise.resolve(); } },
@@ -238,6 +256,22 @@ export function getServiceHealth(): ServiceHealth[] {
         recordsProcessed: smdrListener.totalRecordCount,
         connections: smdrListener.connectionCount,
         error: serviceStatus.get('smdr')?.error,
+      },
+      checkedAt: now,
+    },
+    {
+      name: 'smdr-writer',
+      running: serviceStatus.get('smdr-writer')?.running ?? false,
+      details: {
+        error: serviceStatus.get('smdr-writer')?.error,
+      },
+      checkedAt: now,
+    },
+    {
+      name: 'correlation',
+      running: serviceStatus.get('correlation')?.running ?? false,
+      details: {
+        error: serviceStatus.get('correlation')?.error,
       },
       checkedAt: now,
     },

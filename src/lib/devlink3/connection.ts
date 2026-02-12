@@ -153,30 +153,19 @@ export class DevLink3Connection extends EventEmitter {
         return;
       }
 
-      this.socket.once('connect', () => {
+      // For TLS connections, only handle 'secureConnect' (not 'connect')
+      // to avoid double-resolution which would start duplicate keepalive timers.
+      const connectEvent = useTls ? 'secureConnect' : 'connect';
+      this.socket.once(connectEvent, () => {
         this._isConnected = true;
         this.reconnectAttempt = 0;
         this.chunks = [];
         this.chunksLength = 0;
-        this.log('TCP connection established');
+        this.log(`${useTls ? 'TLS' : 'TCP'} connection established`);
         this.startKeepalive();
         this.emit('connected');
         resolve();
       });
-
-      // For TLS, the 'secureConnect' event fires on successful handshake
-      if (useTls) {
-        this.socket.once('secureConnect', () => {
-          this._isConnected = true;
-          this.reconnectAttempt = 0;
-          this.chunks = [];
-          this.chunksLength = 0;
-          this.log('TLS connection established');
-          this.startKeepalive();
-          this.emit('connected');
-          resolve();
-        });
-      }
 
       this.socket.on('data', (data: Buffer) => {
         this.onData(data);
@@ -246,13 +235,9 @@ export class DevLink3Connection extends EventEmitter {
 
     // 2-byte length (big-endian)
     if (frameLen > 0x7fff) {
-      // 3-byte length encoding for large packets
-      frame.writeUInt8(((frameLen >> 15) & 0xff) | 0x80, offset);
-      offset += 1;
-      frame.writeUInt8((frameLen >> 8) & 0x7f, offset);
-      offset += 1;
-      // Need to realloc with extra byte -- for now, this is extremely rare
-      // The standard 2-byte encoding handles the vast majority of packets
+      // Packets exceeding 32KB are extremely rare in DevLink3.
+      // Reject rather than risk silent corruption from incomplete 3-byte encoding.
+      throw new Error(`Packet too large for 2-byte length encoding: ${frameLen} bytes`);
     } else {
       frame.writeUInt16BE(frameLen, offset);
       offset += 2;

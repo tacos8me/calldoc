@@ -226,7 +226,7 @@ export class SmdrListener extends EventEmitter {
           timestamp: new Date().toISOString(),
         };
 
-        this.redis.publish(REDIS_CHANNELS.calls, JSON.stringify(message)).catch((err) => {
+        this.redis.publish(REDIS_CHANNELS.smdr, JSON.stringify(message)).catch((err) => {
           this.log(`Redis publish error: ${err.message}`);
         });
       }

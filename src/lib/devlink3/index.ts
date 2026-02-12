@@ -221,13 +221,33 @@ export class DevLink3Service extends EventEmitter {
       this.log(`Disconnected: ${reason}`);
       this.emit('disconnected', reason);
 
-      // On reconnect, the connection will fire 'connected' and we re-auth
+      // On reconnect, the connection will fire 'connected' and we re-auth.
+      // Only re-authenticate and re-register events -- do NOT call connectAndAuth()
+      // which would redundantly call connection.connect() on an already-connected socket.
       if (this.isRunning) {
-        // The DevLink3Connection handles reconnect scheduling internally.
-        // We listen for 'connected' to re-authenticate.
         this.connection.once('connected', async () => {
+          if (!this.config || !this.isRunning) return;
           this.log('Reconnected, re-authenticating...');
-          await this.connectAndAuth();
+          try {
+            const { username, password, eventFlags } = this.config;
+            const authOk = await authenticate(this.connection, username, password);
+            if (!authOk) {
+              this.log('Re-authentication failed -- will retry on next reconnect');
+              this.emit('error', new Error('Re-authentication failed'));
+              return;
+            }
+            const flags = eventFlags ?? `${EVENT_FLAGS.CALL_DELTA3} ${EVENT_FLAGS.CM_EXTN}`;
+            const eventsOk = await requestEvents(this.connection, flags);
+            if (!eventsOk) {
+              this.log('Event re-registration failed');
+              return;
+            }
+            this.log('Re-authenticated and event stream restored');
+            this.emit('ready');
+          } catch (err) {
+            this.log(`Re-auth sequence failed: ${err instanceof Error ? err.message : err}`);
+            this.emit('error', err instanceof Error ? err : new Error(String(err)));
+          }
         });
       }
     });

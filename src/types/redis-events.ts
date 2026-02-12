@@ -17,6 +17,8 @@ export const REDIS_CHANNELS = {
   agents: 'ipo:agents',
   /** Hunt group statistics updates */
   groups: 'ipo:groups',
+  /** Raw SMDR records from TCP listener, consumed by SmdrWriter */
+  smdr: 'ipo:smdr',
   /** Transcription lifecycle events (started, progress, completed, failed) */
   transcriptions: 'ipo:transcriptions',
 } as const;

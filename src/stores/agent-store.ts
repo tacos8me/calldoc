@@ -40,16 +40,34 @@ export const useAgentStore = create<AgentStore>()((set) => ({
   updateAgentState: (id, agentState, stateStartTime, activeCallId) =>
     set((state) => {
       const existing = state.agents.get(id);
-      if (!existing) return state;
-
       const next = new Map(state.agents);
-      next.set(id, {
-        ...existing,
-        state: agentState,
-        stateStartTime,
-        stateDuration: 0,
-        activeCallId: activeCallId ?? null,
-      });
+
+      if (existing) {
+        next.set(id, {
+          ...existing,
+          state: agentState,
+          stateStartTime,
+          stateDuration: 0,
+          activeCallId: activeCallId ?? null,
+        });
+      } else {
+        // Create a stub agent for live events from unknown agents.
+        // This ensures DevLink3 state updates are not silently dropped.
+        const ext = id.startsWith('agent-') ? id.slice(6) : id;
+        next.set(id, {
+          id,
+          extension: ext,
+          name: `Ext ${ext}`,
+          state: agentState,
+          stateStartTime,
+          stateDuration: 0,
+          activeCallId: activeCallId ?? null,
+          groups: [],
+          skills: [],
+          loginTime: stateStartTime,
+        });
+      }
+
       return { agents: next };
     }),
 

@@ -79,7 +79,7 @@ describe('useAgentStore - updateAgentState', () => {
     expect(updated.activeCallId).toBeNull();
   });
 
-  it('does nothing when agent ID is not found', () => {
+  it('creates a stub agent when updating state for unknown ID', () => {
     const agent = createMockAgent({ id: 'agent-201', state: 'idle' });
     useAgentStore.getState().updateAgent(agent);
 
@@ -88,7 +88,12 @@ describe('useAgentStore - updateAgentState', () => {
 
     // Original agent unchanged
     expect(useAgentStore.getState().agents.get('agent-201')!.state).toBe('idle');
-    expect(useAgentStore.getState().agents.size).toBe(1);
+    // Stub agent created for the unknown ID
+    expect(useAgentStore.getState().agents.size).toBe(2);
+    const stub = useAgentStore.getState().agents.get('agent-999')!;
+    expect(stub.state).toBe('talking');
+    expect(stub.extension).toBe('999');
+    expect(stub.name).toBe('Ext 999');
   });
 
   it('preserves other agent fields when updating state', () => {

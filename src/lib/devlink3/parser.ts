@@ -229,10 +229,10 @@ function parseDetailFromCsv(xml: string): Delta3DetailRecord {
   return {
     recordType: 'Detail',
     call: {
-      state: safeInt(callFields[1]),   // CallID at [1]
+      state: safeInt(callFields[0]),   // State at [0]
       flags: 0,
       calledType: 0,
-      callId: safeStr(callFields[1]),
+      callId: safeStr(callFields[1]),  // CallID at [1]
       targetGroup: safeStr(callFields[9]),
       origGroup: safeStr(callFields[7]),
       origUser: safeStr(callFields[8]),
