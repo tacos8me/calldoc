@@ -1,0 +1,304 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  /* ------------------------------------------------------------------ */
+  /*  Light theme (secondary -- user toggle)                            */
+  /* ------------------------------------------------------------------ */
+  :root {
+    /* shadcn/ui HSL tokens */
+    --background: 0 0% 100%;
+    --foreground: 240 10% 3.9%;
+
+    --card: 0 0% 98%;
+    --card-foreground: 240 10% 3.9%;
+
+    --popover: 240 5% 90%;
+    --popover-foreground: 240 10% 3.9%;
+
+    --primary: 239 84% 67%;
+    --primary-foreground: 0 0% 98%;
+
+    --secondary: 240 5% 96%;
+    --secondary-foreground: 240 6% 10%;
+
+    --muted: 240 5% 96%;
+    --muted-foreground: 240 4% 46%;
+
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 98%;
+
+    --ring: 239 84% 67%;
+    --input: 240 6% 90%;
+
+    /* CallDoc surface layers */
+    --bg-base: #FFFFFF;
+    --bg-surface: #FAFAFA;
+    --bg-elevated: #F4F4F5;
+    --bg-overlay: #E4E4E7;
+
+    /* Borders */
+    --border-default: #E4E4E7;
+    --border-strong: #D4D4D8;
+    --border-focus: #6366F1;
+
+    /* Text */
+    --text-primary: #09090B;
+    --text-secondary: #52525B;
+    --text-tertiary: #A1A1AA;
+    --text-inverse: #FAFAFA;
+
+    /* Accent (indigo-500 family) */
+    --accent-primary: #6366F1;
+    --accent-hover: #818CF8;
+    --accent-subtle: rgba(99, 102, 241, 0.08);
+    --accent-ring: rgba(99, 102, 241, 0.25);
+
+    /* Status colors (constant across themes) */
+    --status-success: #22C55E;
+    --status-success-muted: rgba(34, 197, 94, 0.1);
+    --status-warning: #EAB308;
+    --status-warning-muted: rgba(234, 179, 8, 0.1);
+    --status-danger: #EF4444;
+    --status-danger-muted: rgba(239, 68, 68, 0.1);
+    --status-info: #3B82F6;
+    --status-info-muted: rgba(59, 130, 246, 0.1);
+
+    /* Event colors (19 event types) */
+    --event-idle: #4ADE80;
+    --event-ringing: #FBBF24;
+    --event-talking: #3B82F6;
+    --event-hold: #EF4444;
+    --event-park: #D97706;
+    --event-queue: #F97316;
+    --event-transfer: #38BDF8;
+    --event-transfer-hold: #FB7185;
+    --event-dialing: #2DD4BF;
+    --event-conference: #818CF8;
+    --event-voicemail: #A78BFA;
+    --event-auto-attendant: #94A3B8;
+    --event-overflow: #6B7280;
+    --event-dnd: #DC2626;
+    --event-acw: #8B5CF6;
+    --event-listen: #06B6D4;
+    --event-calling-drop: #F87171;
+    --event-receiving-drop: #FB923C;
+    --event-busy: #52525B;
+
+    /* Chart series palette (8 colors) */
+    --chart-1: #6366F1;
+    --chart-2: #8B5CF6;
+    --chart-3: #EC4899;
+    --chart-4: #F59E0B;
+    --chart-5: #10B981;
+    --chart-6: #3B82F6;
+    --chart-7: #EF4444;
+    --chart-8: #06B6D4;
+
+    /* Light-mode shadow values */
+    --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.08);
+    --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.12);
+    --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.16);
+    --shadow-xl: 0 16px 48px rgba(0, 0, 0, 0.2);
+  }
+
+  /* ------------------------------------------------------------------ */
+  /*  Dark theme (primary -- default)                                   */
+  /* ------------------------------------------------------------------ */
+  .dark {
+    /* shadcn/ui HSL tokens */
+    --background: 240 10% 3.9%;
+    --foreground: 0 0% 98%;
+
+    --card: 240 10% 3.9%;
+    --card-foreground: 0 0% 98%;
+
+    --popover: 240 4% 16%;
+    --popover-foreground: 0 0% 98%;
+
+    --primary: 239 84% 67%;
+    --primary-foreground: 0 0% 98%;
+
+    --secondary: 240 4% 16%;
+    --secondary-foreground: 0 0% 98%;
+
+    --muted: 240 4% 16%;
+    --muted-foreground: 240 5% 65%;
+
+    --destructive: 0 63% 31%;
+    --destructive-foreground: 0 0% 98%;
+
+    --ring: 239 84% 67%;
+    --input: 240 4% 16%;
+
+    /* CallDoc surface layers */
+    --bg-base: #09090B;
+    --bg-surface: #18181B;
+    --bg-elevated: #27272A;
+    --bg-overlay: #3F3F46;
+
+    /* Borders */
+    --border-default: #27272A;
+    --border-strong: #3F3F46;
+    --border-focus: #6366F1;
+
+    /* Text */
+    --text-primary: #FAFAFA;
+    --text-secondary: #A1A1AA;
+    --text-tertiary: #71717A;
+    --text-inverse: #09090B;
+
+    /* Accent (indigo-500 family) */
+    --accent-primary: #6366F1;
+    --accent-hover: #818CF8;
+    --accent-subtle: rgba(99, 102, 241, 0.08);
+    --accent-ring: rgba(99, 102, 241, 0.25);
+
+    /* Dark-mode shadow values */
+    --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
+    --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.4);
+    --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.5);
+    --shadow-xl: 0 16px 48px rgba(0, 0, 0, 0.6);
+  }
+
+  /* ------------------------------------------------------------------ */
+  /*  Base element styles                                               */
+  /* ------------------------------------------------------------------ */
+  * {
+    border-color: var(--border-default);
+  }
+
+  body {
+    background-color: var(--bg-base);
+    color: var(--text-primary);
+    font-family:
+      "Inter",
+      -apple-system,
+      BlinkMacSystemFont,
+      "Segoe UI",
+      sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  /* ------------------------------------------------------------------ */
+  /*  Reduced motion                                                    */
+  /* ------------------------------------------------------------------ */
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+}
+
+/* ---------------------------------------------------------------------- */
+/*  Skeleton shimmer animation                                            */
+/* ---------------------------------------------------------------------- */
+@layer utilities {
+  .skeleton {
+    @apply relative overflow-hidden rounded-md;
+    background-color: var(--bg-elevated);
+  }
+
+  .skeleton::after {
+    content: "";
+    @apply absolute inset-0;
+    background: linear-gradient(
+      90deg,
+      transparent 0%,
+      rgba(255, 255, 255, 0.04) 50%,
+      transparent 100%
+    );
+    background-size: 200% 100%;
+    animation: shimmer 1.5s infinite linear;
+  }
+}
+
+/* ---------------------------------------------------------------------- */
+/*  Accessibility: Visible focus rings on all interactive elements         */
+/*  WCAG 2.1 AA: SC 2.4.7 Focus Visible                                  */
+/* ---------------------------------------------------------------------- */
+@layer base {
+  /* Consistent focus ring for keyboard users (focus-visible only) */
+  :focus-visible {
+    outline: 2px solid var(--accent-primary);
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
+
+  /* Remove focus outline for mouse users */
+  :focus:not(:focus-visible) {
+    outline: none;
+  }
+
+  /* High-contrast focus ring for links */
+  a:focus-visible {
+    text-decoration: underline;
+    text-underline-offset: 4px;
+  }
+}
+
+/* ---------------------------------------------------------------------- */
+/*  Accessibility: High contrast mode support                              */
+/* ---------------------------------------------------------------------- */
+@media (forced-colors: active) {
+  .skeleton,
+  .skeleton::after {
+    forced-color-adjust: none;
+  }
+}
+
+/* ---------------------------------------------------------------------- */
+/*  Scrollbar styling (dark mode)                                         */
+/* ---------------------------------------------------------------------- */
+@layer base {
+  /* Thin scrollbars for webkit browsers */
+  .dark ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  .dark ::-webkit-scrollbar-track {
+    background: var(--bg-base);
+  }
+
+  .dark ::-webkit-scrollbar-thumb {
+    background: var(--bg-overlay);
+    border-radius: 9999px;
+  }
+
+  .dark ::-webkit-scrollbar-thumb:hover {
+    background: #52525B;
+  }
+
+  /* Firefox scrollbar */
+  .dark * {
+    scrollbar-width: thin;
+    scrollbar-color: var(--bg-overlay) var(--bg-base);
+  }
+
+  /* Light-mode scrollbar */
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: var(--bg-base);
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: var(--bg-elevated);
+    border-radius: 9999px;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: var(--bg-overlay);
+  }
+}

@@ -1,0 +1,132 @@
+# ─── Production Docker Compose Overrides ──────────────────────────────────────
+# Usage: docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d
+#
+# This file overrides the development compose with production settings:
+#   - No simulators (devlink3-sim, smdr-sim, mocksaml)
+#   - External database and Redis URLs
+#   - TLS proxy configuration
+#   - Increased resource limits
+#   - No source volume mounts
+
+version: '3.8'
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        - NODE_ENV=production
+    # Remove dev volume mount (source hot-reload)
+    volumes: []
+    environment:
+      - NODE_ENV=production
+      - DATABASE_URL=${DATABASE_URL:?DATABASE_URL is required for production}
+      - REDIS_URL=${REDIS_URL:?REDIS_URL is required for production}
+      - SESSION_SECRET=${SESSION_SECRET:?SESSION_SECRET is required for production}
+      - NEXTAUTH_URL=${NEXTAUTH_URL:?NEXTAUTH_URL is required for production}
+      - NEXTAUTH_SECRET=${NEXTAUTH_SECRET:?NEXTAUTH_SECRET is required for production}
+      - SAML_ENTRY_POINT=${SAML_ENTRY_POINT:-}
+      - SAML_ISSUER=${SAML_ISSUER:-calldoc}
+      - SAML_CALLBACK_URL=${SAML_CALLBACK_URL:-}
+      - SAML_CERT=${SAML_CERT:-}
+      - DEVLINK3_HOST=${DEVLINK3_HOST:?DEVLINK3_HOST is required for production}
+      - DEVLINK3_PORT=${DEVLINK3_PORT:-50797}
+      - DEVLINK3_USERNAME=${DEVLINK3_USERNAME:?DEVLINK3_USERNAME is required}
+      - DEVLINK3_PASSWORD=${DEVLINK3_PASSWORD:?DEVLINK3_PASSWORD is required}
+      - DEVLINK3_USE_TLS=${DEVLINK3_USE_TLS:-false}
+      - SMDR_PORT=${SMDR_PORT:-1150}
+      - SMDR_HOST=${SMDR_HOST:-0.0.0.0}
+      - MINIO_ENDPOINT=${MINIO_ENDPOINT:-}
+      - MINIO_ACCESS_KEY=${MINIO_ACCESS_KEY:-}
+      - MINIO_SECRET_KEY=${MINIO_SECRET_KEY:-}
+      - MINIO_BUCKET=${MINIO_BUCKET:-recordings}
+      - SMTP_HOST=${SMTP_HOST:-}
+      - SMTP_PORT=${SMTP_PORT:-587}
+      - SMTP_USER=${SMTP_USER:-}
+      - SMTP_PASS=${SMTP_PASS:-}
+      - SMTP_FROM=${SMTP_FROM:-noreply@calldoc.local}
+      - SESSION_MAX_AGE=${SESSION_MAX_AGE:-43200}
+      - SESSION_IDLE_TIMEOUT=${SESSION_IDLE_TIMEOUT:-1800}
+      - LOG_LEVEL=${LOG_LEVEL:-info}
+    depends_on: {}
+    deploy:
+      replicas: ${APP_REPLICAS:-1}
+      resources:
+        limits:
+          memory: 2g
+          cpus: '2.0'
+        reservations:
+          memory: 512m
+          cpus: '0.5'
+      restart_policy:
+        condition: unless-stopped
+        delay: 5s
+        max_attempts: 10
+        window: 120s
+    mem_limit: 2g
+    cpus: 2.0
+    logging:
+      driver: json-file
+      options:
+        max-size: '50m'
+        max-file: '5'
+
+  # ── Disable development-only services ────────────────────────────────────
+  # In production, IP Office provides real DevLink3/SMDR connections.
+  # SAML should be configured to a real IdP.
+
+  devlink3-sim:
+    profiles:
+      - dev-only
+
+  smdr-sim:
+    profiles:
+      - dev-only
+
+  mocksaml:
+    profiles:
+      - dev-only
+
+  # ── Production database overrides ────────────────────────────────────────
+  # If using an external database, disable the local postgres service
+  # by setting EXTERNAL_DB=true in the environment.
+
+  postgres:
+    profiles:
+      - ${DB_PROFILE:-default}
+    deploy:
+      resources:
+        limits:
+          memory: 2g
+          cpus: '1.0'
+        reservations:
+          memory: 256m
+          cpus: '0.25'
+    mem_limit: 2g
+    cpus: 1.0
+
+  redis:
+    profiles:
+      - ${REDIS_PROFILE:-default}
+    deploy:
+      resources:
+        limits:
+          memory: 512m
+          cpus: '0.5'
+        reservations:
+          memory: 64m
+          cpus: '0.1'
+    mem_limit: 512m
+    cpus: 0.5
+
+  minio:
+    profiles:
+      - ${STORAGE_PROFILE:-default}
+    deploy:
+      resources:
+        limits:
+          memory: 1g
+          cpus: '0.5'
+    mem_limit: 1g
+    cpus: 0.5

@@ -1,0 +1,180 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - '3000:3000'
+    environment:
+      - DATABASE_URL=postgresql://calldoc:${POSTGRES_PASSWORD:-calldoc}@postgres:5432/calldoc
+      - REDIS_URL=redis://redis:6379
+      - NEXTAUTH_URL=${NEXTAUTH_URL:-http://localhost:3000}
+      - NEXTAUTH_SECRET=${NEXTAUTH_SECRET:-change-me-in-production}
+      - SAML_ENTRY_POINT=${SAML_ENTRY_POINT:-http://mocksaml:5225/api/saml/sso}
+      - SAML_ISSUER=${SAML_ISSUER:-calldoc}
+      - SAML_CALLBACK_URL=${SAML_CALLBACK_URL:-http://localhost:3000/api/auth/callback/saml}
+      - SAML_CERT=${SAML_CERT:-}
+      - DEVLINK3_HOST=${DEVLINK3_HOST:-devlink3-sim}
+      - DEVLINK3_PORT=${DEVLINK3_PORT:-50797}
+      - DEVLINK3_USERNAME=${DEVLINK3_USERNAME:-admin}
+      - DEVLINK3_PASSWORD=${DEVLINK3_PASSWORD:-admin}
+      - SMDR_HOST=${SMDR_HOST:-smdr-sim}
+      - SMDR_PORT=${SMDR_PORT:-1150}
+      - MINIO_ENDPOINT=${MINIO_ENDPOINT:-http://minio:9000}
+      - MINIO_ACCESS_KEY=${MINIO_ACCESS_KEY:-minioadmin}
+      - MINIO_SECRET_KEY=${MINIO_SECRET_KEY:-minioadmin}
+      - MINIO_BUCKET=${MINIO_BUCKET:-recordings}
+      - SMTP_HOST=${SMTP_HOST:-}
+      - SMTP_PORT=${SMTP_PORT:-587}
+      - SMTP_USER=${SMTP_USER:-}
+      - SMTP_PASS=${SMTP_PASS:-}
+      - SMTP_FROM=${SMTP_FROM:-noreply@calldoc.local}
+      - SESSION_SECRET=${SESSION_SECRET:-change-me-in-production}
+      - SESSION_MAX_AGE=${SESSION_MAX_AGE:-43200}
+      - SESSION_IDLE_TIMEOUT=${SESSION_IDLE_TIMEOUT:-1800}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ['CMD', 'curl', '-f', 'http://localhost:3000/api/health']
+      interval: 30s
+      timeout: 10s
+      start_period: 40s
+      retries: 3
+    restart: unless-stopped
+    mem_limit: 1g
+    cpus: 1.0
+    logging:
+      driver: json-file
+      options:
+        max-size: '10m'
+        max-file: '3'
+    volumes:
+      - ./src:/app/src
+    networks:
+      - calldoc
+
+  postgres:
+    image: postgres:16-alpine
+    ports:
+      - '5432:5432'
+    environment:
+      - POSTGRES_DB=calldoc
+      - POSTGRES_USER=calldoc
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-calldoc}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U calldoc -d calldoc']
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+    mem_limit: 512m
+    cpus: 0.5
+    logging:
+      driver: json-file
+      options:
+        max-size: '10m'
+        max-file: '3'
+    networks:
+      - calldoc
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - '6379:6379'
+    healthcheck:
+      test: ['CMD', 'redis-cli', 'ping']
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+    mem_limit: 256m
+    cpus: 0.25
+    logging:
+      driver: json-file
+      options:
+        max-size: '10m'
+        max-file: '3'
+    networks:
+      - calldoc
+
+  devlink3-sim:
+    build:
+      context: ./simulators/devlink3
+    ports:
+      - '50797:50797'
+    restart: unless-stopped
+    mem_limit: 128m
+    cpus: 0.25
+    logging:
+      driver: json-file
+      options:
+        max-size: '5m'
+        max-file: '2'
+    networks:
+      - calldoc
+
+  smdr-sim:
+    build:
+      context: ./simulators/smdr
+    ports:
+      - '1150:1150'
+    restart: unless-stopped
+    mem_limit: 128m
+    cpus: 0.25
+    logging:
+      driver: json-file
+      options:
+        max-size: '5m'
+        max-file: '2'
+    networks:
+      - calldoc
+
+  mocksaml:
+    image: boxyhq/mock-saml
+    ports:
+      - '5225:5225'
+    restart: unless-stopped
+    mem_limit: 256m
+    cpus: 0.25
+    logging:
+      driver: json-file
+      options:
+        max-size: '5m'
+        max-file: '2'
+    networks:
+      - calldoc
+
+  minio:
+    image: minio/minio:latest
+    ports:
+      - '9000:9000'
+      - '9001:9001'
+    environment:
+      - MINIO_ROOT_USER=${MINIO_ACCESS_KEY:-minioadmin}
+      - MINIO_ROOT_PASSWORD=${MINIO_SECRET_KEY:-minioadmin}
+    volumes:
+      - minio_data:/data
+    command: server /data --console-address ":9001"
+    restart: unless-stopped
+    mem_limit: 512m
+    cpus: 0.5
+    logging:
+      driver: json-file
+      options:
+        max-size: '10m'
+        max-file: '3'
+    networks:
+      - calldoc
+
+volumes:
+  postgres_data:
+  minio_data:
+
+networks:
+  calldoc:
+    driver: bridge
