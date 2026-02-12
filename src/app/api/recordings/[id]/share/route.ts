@@ -8,6 +8,7 @@ import { recordings, recordingShareLinks } from '@/lib/db/schema';
 import { eq } from 'drizzle-orm';
 import { requirePermission } from '@/lib/auth/middleware';
 import { uuidSchema, parseBody, notFoundResponse, serverErrorResponse } from '@/lib/api/validation';
+import { auditLog } from '@/lib/audit/service';
 import * as crypto from 'crypto';
 
 const shareSchema = z.object({
@@ -70,10 +71,35 @@ export async function POST(
       : new URL(request.url).origin;
     const shareUrl = `${baseUrl}/shared/recordings/${token}`;
 
+    // Audit log share link creation for HIPAA compliance
+    const creatorIp = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
+      || request.headers.get('x-real-ip')
+      || 'unknown';
+
+    await auditLog(
+      auth.user.userId,
+      auth.user.name,
+      'recording.shared',
+      'recording',
+      params.id,
+      {
+        shareLinkId: shareLink.id,
+        recordingId: params.id,
+        expiresAt: shareLink.expiresAt.toISOString(),
+        expiresInDays: parsed.data.expiresInDays,
+        maxAccesses: parsed.data.maxAccesses ?? null,
+        snippetStartMs: parsed.data.snippetStartMs ?? null,
+        snippetEndMs: parsed.data.snippetEndMs ?? null,
+      },
+      creatorIp
+    );
+
     return NextResponse.json(
       {
         data: {
           id: shareLink.id,
+          recordingId: params.id,
+          createdBy: auth.user.userId,
           url: shareUrl,
           token,
           expiresAt: shareLink.expiresAt.toISOString(),

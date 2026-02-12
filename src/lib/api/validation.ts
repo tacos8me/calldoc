@@ -1,8 +1,23 @@
 // ─── Shared API Validation Helpers ───────────────────────────────────────────
 // Common Zod schemas and parsing utilities for API route handlers.
+//
+// CSRF Protection:
+// For POST/PUT/DELETE route handlers, call `validateCsrf(request)` at the top
+// of the handler to verify the Origin/Referer header matches the expected host.
+//
+//   import { validateCsrf } from '@/lib/api/csrf';
+//
+//   export async function POST(request: NextRequest) {
+//     const csrfError = validateCsrf(request);
+//     if (csrfError) return csrfError;
+//     // ... handle request
+//   }
 
 import { z } from 'zod';
 import { NextResponse } from 'next/server';
+
+// Re-export CSRF validation for convenience
+export { validateCsrf } from './csrf';
 
 // ---------------------------------------------------------------------------
 // Common Zod Schemas

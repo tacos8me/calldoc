@@ -81,7 +81,10 @@ function timestamp(): string {
 export class DevLink3Connection extends EventEmitter {
   private socket: net.Socket | tls.TLSSocket | null = null;
   private config: DevLink3ConnectionConfig | null = null;
-  private buffer: Buffer = Buffer.alloc(0);
+  /** Accumulated incoming chunks awaiting processing. */
+  private chunks: Buffer[] = [];
+  /** Total byte length across all chunks. */
+  private chunksLength = 0;
   private keepaliveTimer: ReturnType<typeof setInterval> | null = null;
   private reconnectTimer: ReturnType<typeof setTimeout> | null = null;
   private reconnectAttempt = 0;
@@ -129,10 +132,16 @@ export class DevLink3Connection extends EventEmitter {
 
       try {
         if (useTls) {
+          // DEVLINK3_TLS_VERIFY: set to "true" to verify TLS certificates (recommended in production).
+          // Defaults to true in production, false in development.
+          const tlsVerify = process.env.DEVLINK3_TLS_VERIFY
+            ? process.env.DEVLINK3_TLS_VERIFY === 'true'
+            : process.env.NODE_ENV === 'production';
+
           this.socket = tls.connect({
             host,
             port,
-            rejectUnauthorized: false,
+            rejectUnauthorized: tlsVerify,
             ...tlsOptions,
           });
         } else {
@@ -147,7 +156,8 @@ export class DevLink3Connection extends EventEmitter {
       this.socket.once('connect', () => {
         this._isConnected = true;
         this.reconnectAttempt = 0;
-        this.buffer = Buffer.alloc(0);
+        this.chunks = [];
+        this.chunksLength = 0;
         this.log('TCP connection established');
         this.startKeepalive();
         this.emit('connected');
@@ -159,7 +169,8 @@ export class DevLink3Connection extends EventEmitter {
         this.socket.once('secureConnect', () => {
           this._isConnected = true;
           this.reconnectAttempt = 0;
-          this.buffer = Buffer.alloc(0);
+          this.chunks = [];
+          this.chunksLength = 0;
           this.log('TLS connection established');
           this.startKeepalive();
           this.emit('connected');
@@ -285,25 +296,47 @@ export class DevLink3Connection extends EventEmitter {
   }
 
   /**
-   * Handle incoming TCP data. Accumulates into a buffer and extracts
-   * complete packets using the DevLink3 binary framing protocol.
+   * Consolidate accumulated chunks into a single buffer only when we need
+   * to inspect header bytes or extract a complete frame. This avoids
+   * allocating a new concatenated buffer on every TCP data event, which
+   * was the previous hot-path bottleneck under heavy call volume.
+   */
+  private consolidateChunks(): Buffer {
+    if (this.chunks.length === 0) return Buffer.alloc(0);
+    if (this.chunks.length === 1) return this.chunks[0];
+    const buf = Buffer.concat(this.chunks, this.chunksLength);
+    this.chunks = [buf];
+    return buf;
+  }
+
+  /**
+   * Handle incoming TCP data. Accumulates chunks in an array and only
+   * concatenates when enough data is available for a complete frame,
+   * reducing GC pressure under heavy call volume.
    */
   private onData(data: Buffer): void {
-    this.buffer = Buffer.concat([this.buffer, data]);
+    this.chunks.push(data);
+    this.chunksLength += data.length;
 
-    // Process all complete packets in the buffer
-    while (this.buffer.length >= 3) {
+    // Process all complete packets in the accumulated data
+    while (this.chunksLength >= 3) {
+      // Consolidate only when we need to inspect the buffer
+      const buffer = this.consolidateChunks();
+
       // Check magic byte
-      if (this.buffer[0] !== MAGIC_BYTE) {
+      if (buffer[0] !== MAGIC_BYTE) {
         // Scan for next magic byte
-        const idx = this.buffer.indexOf(MAGIC_BYTE, 1);
+        const idx = buffer.indexOf(MAGIC_BYTE, 1);
         if (idx === -1) {
-          this.buffer = Buffer.alloc(0);
+          this.chunks = [];
+          this.chunksLength = 0;
           this.log('Warning: no magic byte found in buffer, discarding');
           return;
         }
         this.log(`Warning: skipping ${idx} bytes to next magic byte`);
-        this.buffer = this.buffer.subarray(idx);
+        const remaining = buffer.subarray(idx);
+        this.chunks = [remaining];
+        this.chunksLength = remaining.length;
         continue;
       }
 
@@ -312,31 +345,40 @@ export class DevLink3Connection extends EventEmitter {
       let headerSize = 3; // magic(1) + length(2)
 
       // Check for 3-byte length encoding
-      if (this.buffer[1] & 0x80) {
-        if (this.buffer.length < 4) return; // Need more data
+      if (buffer[1] & 0x80) {
+        if (this.chunksLength < 4) return; // Need more data
         frameLen =
-          ((this.buffer[1] & 0x7f) << 15) |
-          ((this.buffer[2] & 0x7f) << 8) |
-          this.buffer[3];
+          ((buffer[1] & 0x7f) << 15) |
+          ((buffer[2] & 0x7f) << 8) |
+          buffer[3];
         headerSize = 4;
       } else {
-        frameLen = this.buffer.readUInt16BE(1);
+        frameLen = buffer.readUInt16BE(1);
       }
 
       if (frameLen < 3) {
         this.log(`Warning: invalid frame length ${frameLen}, skipping byte`);
-        this.buffer = this.buffer.subarray(1);
+        const remaining = buffer.subarray(1);
+        this.chunks = [remaining];
+        this.chunksLength = remaining.length;
         continue;
       }
 
       // Wait for full frame
-      if (this.buffer.length < frameLen) {
+      if (this.chunksLength < frameLen) {
         return;
       }
 
-      // Extract the complete frame
-      const frameData = this.buffer.subarray(0, frameLen);
-      this.buffer = this.buffer.subarray(frameLen);
+      // Extract the complete frame and keep the remainder
+      const frameData = buffer.subarray(0, frameLen);
+      const remaining = buffer.subarray(frameLen);
+      if (remaining.length > 0) {
+        this.chunks = [remaining];
+        this.chunksLength = remaining.length;
+      } else {
+        this.chunks = [];
+        this.chunksLength = 0;
+      }
 
       // Parse the packet
       this.parseFrame(frameData, headerSize);
@@ -514,7 +556,8 @@ export class DevLink3Connection extends EventEmitter {
     }
 
     this._isConnected = false;
-    this.buffer = Buffer.alloc(0);
+    this.chunks = [];
+    this.chunksLength = 0;
   }
 
   /**

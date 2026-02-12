@@ -8,8 +8,6 @@
 #   - Increased resource limits
 #   - No source volume mounts
 
-version: '3.8'
-
 services:
   app:
     build:
@@ -35,6 +33,8 @@ services:
       - DEVLINK3_USERNAME=${DEVLINK3_USERNAME:?DEVLINK3_USERNAME is required}
       - DEVLINK3_PASSWORD=${DEVLINK3_PASSWORD:?DEVLINK3_PASSWORD is required}
       - DEVLINK3_USE_TLS=${DEVLINK3_USE_TLS:-false}
+      # DEVLINK3_TLS_VERIFY should be true in production to verify TLS certificates
+      - DEVLINK3_TLS_VERIFY=${DEVLINK3_TLS_VERIFY:-true}
       - SMDR_PORT=${SMDR_PORT:-1150}
       - SMDR_HOST=${SMDR_HOST:-0.0.0.0}
       - MINIO_ENDPOINT=${MINIO_ENDPOINT:-}
@@ -93,9 +93,12 @@ services:
   # If using an external database, disable the local postgres service
   # by setting EXTERNAL_DB=true in the environment.
 
+  # In production, postgres and redis should NOT expose ports to the host.
+  # They should only be accessible within the Docker network.
   postgres:
     profiles:
       - ${DB_PROFILE:-default}
+    ports: !override []
     deploy:
       resources:
         limits:
@@ -110,6 +113,8 @@ services:
   redis:
     profiles:
       - ${REDIS_PROFILE:-default}
+    ports: !override []
+    command: redis-server --requirepass ${REDIS_PASSWORD:?REDIS_PASSWORD is required for production}
     deploy:
       resources:
         limits:

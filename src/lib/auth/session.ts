@@ -24,17 +24,74 @@ export interface SessionData {
 // Config constants
 // ---------------------------------------------------------------------------
 
-const SESSION_SECRET = process.env.SESSION_SECRET || 'change-me-in-production-at-least-32-chars!';
+let _cachedSessionSecret: string | null = null;
+let _warnedAboutDefault = false;
+
+/**
+ * Resolve the session secret lazily at runtime (not at build time).
+ * In production, throws if SESSION_SECRET is not set.
+ * In development, falls back to an insecure default with a warning.
+ */
+function getSessionSecret(): string {
+  if (_cachedSessionSecret) return _cachedSessionSecret;
+
+  const secret = process.env.SESSION_SECRET;
+  if (secret) {
+    _cachedSessionSecret = secret;
+    return secret;
+  }
+
+  if (process.env.NODE_ENV === 'production') {
+    throw new Error(
+      'SESSION_SECRET environment variable is required in production. ' +
+      'Set a strong, random secret of at least 32 characters.'
+    );
+  }
+
+  // Development fallback – log a warning (once)
+  if (!_warnedAboutDefault) {
+    console.warn(
+      '[auth/session] WARNING: SESSION_SECRET is not set. ' +
+      'Using insecure default. Do NOT use this in production.'
+    );
+    _warnedAboutDefault = true;
+  }
+  _cachedSessionSecret = 'change-me-in-production-at-least-32-chars!';
+  return _cachedSessionSecret;
+}
+
 const SESSION_MAX_AGE = parseInt(process.env.SESSION_MAX_AGE || '43200', 10); // 12 hours default
 const SESSION_IDLE_TIMEOUT = parseInt(process.env.SESSION_IDLE_TIMEOUT || '1800', 10); // 30 min default
 const COOKIE_NAME = 'calldoc.sid';
 
+/**
+ * Build iron-session options lazily so the session secret is resolved at
+ * runtime rather than at module-load / build time.
+ */
+export function getSessionOptions() {
+  return {
+    password: getSessionSecret(),
+    cookieName: COOKIE_NAME,
+    cookieOptions: {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax' as const,
+      maxAge: SESSION_MAX_AGE,
+      path: '/',
+    },
+  };
+}
+
+/**
+ * @deprecated Use getSessionOptions() for lazy secret resolution. This alias
+ * exists for backward-compatibility with external imports.
+ */
 export const sessionOptions = {
-  password: SESSION_SECRET,
+  get password() { return getSessionSecret(); },
   cookieName: COOKIE_NAME,
   cookieOptions: {
     httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
+    get secure() { return process.env.NODE_ENV === 'production'; },
     sameSite: 'lax' as const,
     maxAge: SESSION_MAX_AGE,
     path: '/',
@@ -52,7 +109,7 @@ export const sessionOptions = {
 export async function getSession(
   req: NextRequest
 ): Promise<IronSession<SessionData>> {
-  const session = await getIronSession<SessionData>(req, new Response(), sessionOptions);
+  const session = await getIronSession<SessionData>(req, new Response(), getSessionOptions());
   return session;
 }
 
@@ -64,7 +121,7 @@ export async function getSessionFromCookies(
   cookieStore: ReadonlyRequestCookies
 ): Promise<IronSession<SessionData>> {
   // iron-session v8 supports cookies() directly
-  const session = await getIronSession<SessionData>(cookieStore, sessionOptions);
+  const session = await getIronSession<SessionData>(cookieStore, getSessionOptions());
   return session;
 }
 
@@ -89,7 +146,7 @@ export async function createSession(
   cookieStore: ReadonlyRequestCookies,
   user: CreateSessionInput
 ): Promise<void> {
-  const session = await getIronSession<SessionData>(cookieStore, sessionOptions);
+  const session = await getIronSession<SessionData>(cookieStore, getSessionOptions());
 
   session.userId = user.userId;
   session.email = user.email;
@@ -109,7 +166,7 @@ export async function createSession(
 export async function destroySession(
   cookieStore: ReadonlyRequestCookies
 ): Promise<void> {
-  const session = await getIronSession<SessionData>(cookieStore, sessionOptions);
+  const session = await getIronSession<SessionData>(cookieStore, getSessionOptions());
   session.destroy();
 }
 
@@ -139,7 +196,7 @@ export function isSessionValid(session: SessionData | Partial<SessionData>): boo
 export async function touchSession(
   cookieStore: ReadonlyRequestCookies
 ): Promise<void> {
-  const session = await getIronSession<SessionData>(cookieStore, sessionOptions);
+  const session = await getIronSession<SessionData>(cookieStore, getSessionOptions());
   if (session.userId) {
     session.lastActivity = Date.now();
     await session.save();

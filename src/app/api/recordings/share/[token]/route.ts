@@ -135,6 +135,25 @@ export async function GET(
       })
       .where(eq(recordingShareLinks.id, shareLink.id));
 
+    // Audit log every share link access for HIPAA compliance
+    const accessIp = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
+      || request.headers.get('x-real-ip')
+      || 'unknown';
+    const userAgent = request.headers.get('user-agent') || 'unknown';
+    console.log(
+      JSON.stringify({
+        event: 'share_link.accessed',
+        timestamp: new Date().toISOString(),
+        tokenHash,
+        recordingId: recording.id,
+        shareLinkId: shareLink.id,
+        ipAddress: accessIp,
+        userAgent,
+        accessCount: (shareLink.accessCount ?? 0) + 1,
+        isStream: request.nextUrl.searchParams.get('stream') === 'true',
+      })
+    );
+
     // Check if streaming audio was requested
     const isStreamRequest = request.nextUrl.searchParams.get('stream') === 'true';
 

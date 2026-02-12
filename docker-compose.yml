@@ -7,9 +7,7 @@ services:
       - '3000:3000'
     environment:
       - DATABASE_URL=postgresql://calldoc:${POSTGRES_PASSWORD:-calldoc}@postgres:5432/calldoc
-      - REDIS_URL=redis://redis:6379
-      - NEXTAUTH_URL=${NEXTAUTH_URL:-http://localhost:3000}
-      - NEXTAUTH_SECRET=${NEXTAUTH_SECRET:-change-me-in-production}
+      - REDIS_URL=redis://:${REDIS_PASSWORD:-calldoc}@redis:6379
       - SAML_ENTRY_POINT=${SAML_ENTRY_POINT:-http://mocksaml:5225/api/saml/sso}
       - SAML_ISSUER=${SAML_ISSUER:-calldoc}
       - SAML_CALLBACK_URL=${SAML_CALLBACK_URL:-http://localhost:3000/api/auth/callback/saml}
@@ -18,6 +16,7 @@ services:
       - DEVLINK3_PORT=${DEVLINK3_PORT:-50797}
       - DEVLINK3_USERNAME=${DEVLINK3_USERNAME:-admin}
       - DEVLINK3_PASSWORD=${DEVLINK3_PASSWORD:-admin}
+      - DEVLINK3_TLS_VERIFY=${DEVLINK3_TLS_VERIFY:-false}
       - SMDR_HOST=${SMDR_HOST:-smdr-sim}
       - SMDR_PORT=${SMDR_PORT:-1150}
       - MINIO_ENDPOINT=${MINIO_ENDPOINT:-http://minio:9000}
@@ -87,8 +86,9 @@ services:
     image: redis:7-alpine
     ports:
       - '6379:6379'
+    command: redis-server --requirepass ${REDIS_PASSWORD:-calldoc}
     healthcheck:
-      test: ['CMD', 'redis-cli', 'ping']
+      test: ['CMD', 'redis-cli', '-a', '${REDIS_PASSWORD:-calldoc}', 'ping']
       interval: 5s
       timeout: 5s
       retries: 5

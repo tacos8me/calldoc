@@ -81,7 +81,7 @@ export function getSamlStrategy(
       callbackUrl: SAML_CALLBACK_URL,
       idpCert: SAML_CERT,
       wantAssertionsSigned: true,
-      wantAuthnResponseSigned: false,
+      wantAuthnResponseSigned: true,
       signatureAlgorithm: 'sha256',
       digestAlgorithm: 'sha256',
       identifierFormat: 'urn:oasis:names:tc:SAML:1.1:nameid-format:emailAddress',

@@ -37,6 +37,7 @@ export const users = pgTable(
     groupAccess: jsonb('group_access').$type<string[]>().default([]),
     permissions: jsonb('permissions').$type<string[]>().default([]),
     lastLoginAt: timestamp('last_login_at', { withTimezone: true }),
+    passwordHash: varchar('password_hash', { length: 255 }),
     active: boolean('active').notNull().default(true),
     ssoProvider: varchar('sso_provider', { length: 100 }),
     ssoSubjectId: varchar('sso_subject_id', { length: 255 }),
