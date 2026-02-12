@@ -394,6 +394,7 @@ export default function AdminSettingsPage() {
       sloUrl: samlSloUrl || undefined,
       certificate: samlCert,
       active: samlActive,
+      signatureAlgorithm: samlSigAlgorithm,
       attributeMapping,
       groupRoleMapping,
     };

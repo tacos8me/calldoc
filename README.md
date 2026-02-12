@@ -81,6 +81,14 @@ Chronicall (Xima) and TASKE are the standard reporting platforms for Avaya IP Of
 - Shareable links with optional expiry
 - MinIO (S3-compatible) storage with configurable retention policies
 
+### Transcription
+- **Speech-to-text** powered by NVIDIA Parakeet TDT 0.6B V2
+- Word-level timestamps and confidence scores
+- Synchronized playback highlighting — click any word to seek
+- Full-text search across all transcripts
+- Speaker diarization support
+- Mock mode for development (no GPU required)
+
 ### Wallboards
 - Full-screen display mode for contact center monitors
 - Create unlimited wallboard layouts
@@ -133,6 +141,13 @@ Chronicall (Xima) and TASKE are the standard reporting platforms for Avaya IP Of
   <img src="docs/screenshots/recordings.png" alt="Recordings — Browser with waveform player and QA scorecard" width="900" />
 </p>
 <p align="center"><em>Recording browser with waveform visualization, playback controls, notes, and quality scorecard panel</em></p>
+
+### Transcription
+<!-- Screenshot: Transcription overview with search and stats -->
+<p align="center">
+  <img src="docs/screenshots/transcription.png" alt="Transcription — Speech-to-text overview with search and confidence scores" width="900" />
+</p>
+<p align="center"><em>Transcription overview with full-text search, confidence scores, and word-level playback synchronization</em></p>
 
 ### Wallboard
 <!-- Screenshot: Fullscreen wallboard on a large display -->
