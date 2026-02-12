@@ -18,6 +18,7 @@ import {
   Loader2,
   AlertTriangle,
   Radio,
+  ExternalLink,
 } from 'lucide-react';
 import { DataTable } from '@/components/shared/data-table';
 import {
@@ -35,6 +36,7 @@ import { useActiveCalls } from '@/stores/call-store';
 import { useUIStore } from '@/stores/ui-store';
 import { useKeyboardShortcuts, type ShortcutDef } from '@/hooks/use-keyboard-shortcuts';
 import type { Call, CallEvent, CallDirection, CallState, CallEventType } from '@/types';
+import { TranscriptionBadge } from '@/components/recordings/transcription-badge';
 
 // ---------------------------------------------------------------------------
 // Mock data generator (kept as fallback for demo mode)
@@ -324,11 +326,14 @@ function buildColumns(eventsMap: Map<string, CallEvent[]>) {
       header: 'Rec',
       cell: (info) =>
         info.getValue() ? (
-          <Mic className="h-4 w-4 text-status-info" />
+          <div className="flex items-center gap-1.5">
+            <Mic className="h-4 w-4 text-status-info" />
+            <TranscriptionBadge status={null} compact />
+          </div>
         ) : (
           <span className="text-content-tertiary">--</span>
         ),
-      size: 50,
+      size: 70,
       enableSorting: false,
     }),
     columnHelper.display({
@@ -624,6 +629,97 @@ function ExpandedCallContent({
           <EventDetailList events={events} />
         )}
       </div>
+
+      {/* Transcript preview (if call has a recording) */}
+      {call.recordingId && (
+        <TranscriptPreview recordingId={call.recordingId} />
+      )}
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Transcript preview for expanded call rows
+// ---------------------------------------------------------------------------
+
+/** Try to import hooks; fallback to stubs if not yet available. */
+let useTranscriptionHookForCalls: (recordingId: string) => {
+  data: { status: string; transcript: string | null; confidence: number | null } | null | undefined;
+  isLoading: boolean;
+};
+
+try {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const hooks = require('@/hooks/use-transcriptions');
+  useTranscriptionHookForCalls = hooks.useTranscription;
+} catch {
+  useTranscriptionHookForCalls = () => ({
+    data: null,
+    isLoading: false,
+  });
+}
+
+function TranscriptPreview({ recordingId }: { recordingId: string }) {
+  const { data: transcription, isLoading } = useTranscriptionHookForCalls(recordingId);
+
+  if (isLoading) {
+    return (
+      <div className="rounded-lg border border-border bg-surface-base p-3">
+        <h4 className="mb-2 text-heading-sm text-content-primary">Transcript</h4>
+        <div className="space-y-2">
+          <div className="h-4 w-full animate-shimmer rounded bg-surface-elevated bg-gradient-to-r from-surface-elevated via-surface-overlay to-surface-elevated bg-[length:200%_100%]" />
+          <div className="h-4 w-3/4 animate-shimmer rounded bg-surface-elevated bg-gradient-to-r from-surface-elevated via-surface-overlay to-surface-elevated bg-[length:200%_100%]" />
+        </div>
+      </div>
+    );
+  }
+
+  // No transcription data available
+  if (!transcription) {
+    return null;
+  }
+
+  // Show badge for non-completed states
+  if (transcription.status !== 'completed') {
+    return (
+      <div className="rounded-lg border border-border bg-surface-base p-3">
+        <div className="flex items-center justify-between">
+          <h4 className="text-heading-sm text-content-primary">Transcript</h4>
+          <TranscriptionBadge
+            status={transcription.status as 'pending' | 'processing' | 'failed'}
+          />
+        </div>
+      </div>
+    );
+  }
+
+  // Completed: show first ~200 chars preview
+  const fullText = transcription.transcript ?? '';
+  const preview = fullText.length > 200 ? fullText.slice(0, 200) + '...' : fullText;
+
+  if (!preview) {
+    return null;
+  }
+
+  return (
+    <div className="rounded-lg border border-border bg-surface-base p-3">
+      <div className="mb-2 flex items-center justify-between">
+        <h4 className="text-heading-sm text-content-primary">Transcript</h4>
+        <TranscriptionBadge
+          status="completed"
+          confidence={transcription.confidence}
+        />
+      </div>
+      <p className="mb-3 text-body-sm leading-relaxed text-content-secondary">
+        {preview}
+      </p>
+      <a
+        href={`/recordings?recording=${recordingId}&tab=transcript`}
+        className="inline-flex items-center gap-1.5 text-caption font-medium text-accent hover:underline"
+      >
+        View Full Transcript
+        <ExternalLink className="h-3 w-3" />
+      </a>
     </div>
   );
 }

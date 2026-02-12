@@ -32,6 +32,7 @@ services:
       - SESSION_SECRET=${SESSION_SECRET:-change-me-in-production}
       - SESSION_MAX_AGE=${SESSION_MAX_AGE:-43200}
       - SESSION_IDLE_TIMEOUT=${SESSION_IDLE_TIMEOUT:-1800}
+      - TRANSCRIPTION_URL=http://transcription:8000
     depends_on:
       postgres:
         condition: service_healthy
@@ -163,6 +164,25 @@ services:
     restart: unless-stopped
     mem_limit: 512m
     cpus: 0.5
+    logging:
+      driver: json-file
+      options:
+        max-size: '10m'
+        max-file: '3'
+    networks:
+      - calldoc
+
+  transcription:
+    build:
+      context: ./simulators/transcription
+    ports:
+      - '8000:8000'
+    environment:
+      - TRANSCRIPTION_MODE=${TRANSCRIPTION_MODE:-mock}
+      - CALLBACK_BASE_URL=http://app:3000
+    restart: unless-stopped
+    mem_limit: 2g
+    cpus: 1.0
     logging:
       driver: json-file
       options:

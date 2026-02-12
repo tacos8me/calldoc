@@ -49,6 +49,7 @@ services:
       - SESSION_MAX_AGE=${SESSION_MAX_AGE:-43200}
       - SESSION_IDLE_TIMEOUT=${SESSION_IDLE_TIMEOUT:-1800}
       - LOG_LEVEL=${LOG_LEVEL:-info}
+      - TRANSCRIPTION_URL=${TRANSCRIPTION_URL:-http://transcription:8000}
     depends_on: {}
     deploy:
       replicas: ${APP_REPLICAS:-1}
@@ -130,3 +131,16 @@ services:
           cpus: '0.5'
     mem_limit: 1g
     cpus: 0.5
+
+  transcription:
+    environment:
+      - TRANSCRIPTION_MODE=nemo
+    deploy:
+      resources:
+        limits:
+          memory: 8g
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]

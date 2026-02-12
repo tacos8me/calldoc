@@ -40,6 +40,17 @@ export type {
   RecordingShareLink,
 } from './recordings';
 
+// Transcription domain
+export type {
+  TranscriptionStatus,
+  TranscriptWord,
+  TranscriptSegment,
+  Transcription,
+  TranscriptionJob,
+  TranscriptionStats,
+  TranscriptionSearchResult,
+} from './transcriptions';
+
 // Report domain
 export type {
   Report,
@@ -145,6 +156,8 @@ export type {
   CallEventMessage,
   AgentStateMessage,
   GroupStatsMessage,
+  TranscriptionEventMessageType,
+  TranscriptionEventMessage,
   RedisMessage,
 } from './redis-events';
 

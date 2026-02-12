@@ -170,3 +170,15 @@ export {
   webhookDeliveriesRelations,
   bulkJobsRelations,
 } from './advanced';
+
+// ── Transcriptions ──────────────────────────────────────────────────────
+export {
+  // Enums
+  transcriptionStatusEnum,
+  // Tables
+  transcriptions,
+  transcriptionSearch,
+  // Relations
+  transcriptionsRelations,
+  transcriptionSearchRelations,
+} from './transcriptions';

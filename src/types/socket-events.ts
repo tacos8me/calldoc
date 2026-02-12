@@ -23,6 +23,14 @@ export interface ServerToClientEvents {
   'alert': (data: AlertNotification) => void;
   /** System service status changed */
   'system:status': (data: SystemStatus) => void;
+  /** A transcription job has started processing */
+  'transcription:started': (data: { recordingId: string; transcriptionId: string; jobId: string }) => void;
+  /** A transcription job progress update */
+  'transcription:progress': (data: { recordingId: string; transcriptionId: string; progress: number }) => void;
+  /** A transcription job completed successfully */
+  'transcription:completed': (data: { recordingId: string; transcriptionId: string }) => void;
+  /** A transcription job failed */
+  'transcription:failed': (data: { recordingId: string; transcriptionId: string; error: string }) => void;
 }
 
 /**

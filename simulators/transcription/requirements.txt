@@ -1,0 +1,9 @@
+fastapi==0.115.0
+uvicorn[standard]==0.32.0
+python-multipart==0.0.12
+aiohttp==3.10.0
+aiofiles==24.1.0
+pydub==0.25.1
+
+# For GPU environments with NVIDIA Parakeet model, also install:
+# nemo_toolkit[asr]

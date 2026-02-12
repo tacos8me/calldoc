@@ -20,12 +20,16 @@ import {
   PhoneOutgoing,
   Loader2,
   AlertTriangle,
+  FileText,
+  MessageSquare,
 } from 'lucide-react';
 import {
   WaveformPlayer,
   PlaybackControls,
   RecordingNotes,
   ScorecardPanel,
+  TranscriptViewer,
+  TranscriptionBadge,
   MOCK_NOTES,
 } from '@/components/recordings';
 import type { WaveformAnnotation } from '@/components/recordings/waveform-player';
@@ -279,6 +283,7 @@ export default function RecordingsPage() {
   const [filterScored, setFilterScored] = useState<'all' | 'scored' | 'unscored'>('all');
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [showScorecard, setShowScorecard] = useState(false);
+  const [activeTab, setActiveTab] = useState<'notes' | 'transcript'>('notes');
   const [playing, setPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const [playbackRate, setPlaybackRate] = useState(1);
@@ -524,6 +529,9 @@ export default function RecordingsPage() {
                 Score
               </th>
               <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-[var(--text-tertiary)]">
+                Transcript
+              </th>
+              <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-[var(--text-tertiary)]">
                 Tags
               </th>
             </tr>
@@ -531,7 +539,7 @@ export default function RecordingsPage() {
           <tbody className="divide-y divide-[var(--border-default)]">
             {isLoading && filtered.length === 0 ? (
               <tr>
-                <td colSpan={9} className="px-4 py-16 text-center">
+                <td colSpan={10} className="px-4 py-16 text-center">
                   <Loader2 className="mx-auto mb-3 h-8 w-8 animate-spin text-[var(--text-tertiary)]" />
                   <p className="text-sm text-[var(--text-secondary)]">
                     Loading recordings...
@@ -545,7 +553,7 @@ export default function RecordingsPage() {
 
                 return (
                   <tr key={rec.id} className="group">
-                    <td colSpan={9} className="p-0">
+                    <td colSpan={10} className="p-0">
                       {/* Summary row */}
                       <button
                         onClick={() => handleRowClick(rec.id)}
@@ -564,7 +572,7 @@ export default function RecordingsPage() {
                             )}
                           />
                         </div>
-                        <div className="flex-1 grid grid-cols-[1fr_1fr_1fr_1fr_80px_100px_60px_1fr] items-center gap-0">
+                        <div className="flex-1 grid grid-cols-[1fr_1fr_1fr_1fr_80px_100px_60px_80px_1fr] items-center gap-0">
                           <div className="px-4 py-3">
                             <div className="flex items-center gap-1.5">
                               {rec.direction === 'inbound' ? (
@@ -601,6 +609,9 @@ export default function RecordingsPage() {
                             >
                               {scoreBadge.text}
                             </span>
+                          </div>
+                          <div className="px-4 py-3">
+                            <TranscriptionBadge status={null} compact />
                           </div>
                           <div className="px-4 py-3">
                             <div className="flex flex-wrap gap-1">
@@ -677,16 +688,57 @@ export default function RecordingsPage() {
                                 </button>
                               </div>
 
-                              {/* Notes */}
-                              <div className="border-t border-[var(--border-default)]">
-                                <RecordingNotes
-                                  notes={displayNotes}
-                                  currentTimeMs={currentTime * 1000}
-                                  onSeek={(ms) => setCurrentTime(ms / 1000)}
-                                  onAddNote={handleAddNote}
-                                  className="max-h-[300px]"
-                                />
+                              {/* Tab bar: Notes / Transcript */}
+                              <div className="flex border-t border-[var(--border-default)]">
+                                <button
+                                  onClick={() => setActiveTab('notes')}
+                                  className={cn(
+                                    'flex items-center gap-1.5 px-4 py-2.5 text-sm font-medium transition-colors border-b-2',
+                                    activeTab === 'notes'
+                                      ? 'border-[var(--accent-primary)] text-[var(--accent-primary)]'
+                                      : 'border-transparent text-[var(--text-tertiary)] hover:text-[var(--text-secondary)]'
+                                  )}
+                                >
+                                  <MessageSquare className="h-3.5 w-3.5" />
+                                  Notes
+                                </button>
+                                <button
+                                  onClick={() => setActiveTab('transcript')}
+                                  className={cn(
+                                    'flex items-center gap-1.5 px-4 py-2.5 text-sm font-medium transition-colors border-b-2',
+                                    activeTab === 'transcript'
+                                      ? 'border-[var(--accent-primary)] text-[var(--accent-primary)]'
+                                      : 'border-transparent text-[var(--text-tertiary)] hover:text-[var(--text-secondary)]'
+                                  )}
+                                >
+                                  <FileText className="h-3.5 w-3.5" />
+                                  Transcript
+                                </button>
                               </div>
+
+                              {/* Tab content */}
+                              {activeTab === 'notes' && (
+                                <div className="border-t border-[var(--border-default)]">
+                                  <RecordingNotes
+                                    notes={displayNotes}
+                                    currentTimeMs={currentTime * 1000}
+                                    onSeek={(ms) => setCurrentTime(ms / 1000)}
+                                    onAddNote={handleAddNote}
+                                    className="max-h-[300px]"
+                                  />
+                                </div>
+                              )}
+
+                              {activeTab === 'transcript' && (
+                                <div className="border-t border-[var(--border-default)]">
+                                  <TranscriptViewer
+                                    recordingId={expandedRecording.id}
+                                    currentTime={currentTime}
+                                    onSeek={(time) => setCurrentTime(time)}
+                                    className="max-h-[400px]"
+                                  />
+                                </div>
+                              )}
                             </div>
 
                             {/* Right: Scorecard */}
@@ -710,7 +762,7 @@ export default function RecordingsPage() {
 
             {filtered.length === 0 && !isLoading && (
               <tr>
-                <td colSpan={9} className="px-4 py-16 text-center">
+                <td colSpan={10} className="px-4 py-16 text-center">
                   <Mic className="mx-auto mb-3 h-8 w-8 text-[var(--text-tertiary)]" />
                   <p className="text-sm text-[var(--text-secondary)]">
                     No recordings found

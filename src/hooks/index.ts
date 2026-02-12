@@ -5,3 +5,4 @@ export * from './use-reports';
 export * from './use-recordings';
 export * from './use-wallboards';
 export * from './use-admin';
+export * from './use-transcriptions';

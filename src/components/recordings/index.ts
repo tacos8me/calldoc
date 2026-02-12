@@ -12,3 +12,9 @@ export type { ScorecardPanelProps, ScorecardTemplateDef, ScorecardCategory, Scor
 
 export { PciControls } from './pci-controls';
 export type { PciControlsProps, PciSegment, PciAuditEntry, PauseReason } from './pci-controls';
+
+export { TranscriptViewer } from './transcript-viewer';
+export type { TranscriptViewerProps } from './transcript-viewer';
+
+export { TranscriptionBadge } from './transcription-badge';
+export type { TranscriptionBadgeProps } from './transcription-badge';

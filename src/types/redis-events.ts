@@ -17,6 +17,8 @@ export const REDIS_CHANNELS = {
   agents: 'ipo:agents',
   /** Hunt group statistics updates */
   groups: 'ipo:groups',
+  /** Transcription lifecycle events (started, progress, completed, failed) */
+  transcriptions: 'ipo:transcriptions',
 } as const;
 
 export type RedisChannel = (typeof REDIS_CHANNELS)[keyof typeof REDIS_CHANNELS];
@@ -79,6 +81,35 @@ export interface GroupStatsMessage {
 }
 
 /**
+ * Transcription event types published to the transcriptions channel.
+ */
+export type TranscriptionEventMessageType =
+  | 'transcription:started'
+  | 'transcription:progress'
+  | 'transcription:completed'
+  | 'transcription:failed';
+
+/**
+ * Message published to the ipo:transcriptions Redis channel.
+ */
+export interface TranscriptionEventMessage {
+  /** Event type discriminator */
+  type: TranscriptionEventMessageType;
+  /** Parent recording identifier */
+  recordingId: string;
+  /** Transcription identifier */
+  transcriptionId: string;
+  /** Parakeet job ID (for started events) */
+  jobId?: string;
+  /** Processing progress 0-100 (for progress events) */
+  progress?: number;
+  /** Error message (for failed events) */
+  error?: string;
+  /** ISO timestamp when the event was published */
+  timestamp: string;
+}
+
+/**
  * Union of all Redis pub/sub message types.
  */
-export type RedisMessage = CallEventMessage | AgentStateMessage | GroupStatsMessage;
+export type RedisMessage = CallEventMessage | AgentStateMessage | GroupStatsMessage | TranscriptionEventMessage;

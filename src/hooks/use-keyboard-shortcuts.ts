@@ -128,8 +128,19 @@ export const RECORDING_SHORTCUTS: ShortcutInfo[] = [
   { key: ']', description: 'Set snippet end', category: 'Recording Player' },
 ];
 
+export const NAVIGATION_SHORTCUTS: ShortcutInfo[] = [
+  { key: 'G then D', description: 'Go to Dashboard', category: 'Navigation' },
+  { key: 'G then C', description: 'Go to Calls', category: 'Navigation' },
+  { key: 'G then A', description: 'Go to Agent Timeline', category: 'Navigation' },
+  { key: 'G then R', description: 'Go to Reports', category: 'Navigation' },
+  { key: 'G then T', description: 'Go to Transcriptions', category: 'Navigation' },
+  { key: 'G then W', description: 'Go to Wallboards', category: 'Navigation' },
+  { key: 'G then S', description: 'Go to Admin Settings', category: 'Navigation' },
+];
+
 export const ALL_SHORTCUTS: ShortcutInfo[] = [
   ...GLOBAL_SHORTCUTS,
+  ...NAVIGATION_SHORTCUTS,
   ...TABLE_SHORTCUTS,
   ...REPORT_SHORTCUTS,
   ...RECORDING_SHORTCUTS,

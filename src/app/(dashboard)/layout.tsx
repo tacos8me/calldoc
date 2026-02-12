@@ -9,6 +9,7 @@ import {
   Users,
   BarChart3,
   Mic,
+  FileText,
   Monitor,
   Settings,
   Moon,
@@ -68,6 +69,12 @@ const NAV_ITEMS: NavItem[] = [
     section: 'DATA',
   },
   {
+    label: 'Transcriptions',
+    href: '/transcriptions',
+    icon: <FileText className="h-5 w-5" />,
+    section: 'DATA',
+  },
+  {
     label: 'Wallboards',
     href: '/wallboards',
     icon: <Monitor className="h-5 w-5" />,
@@ -91,6 +98,7 @@ function getBreadcrumbs(pathname: string): { label: string; href: string }[] {
     calls: 'Calls',
     reports: 'Reports',
     recordings: 'Recordings',
+    transcriptions: 'Transcriptions',
     wallboards: 'Wallboards',
     admin: 'Admin',
     settings: 'Settings',

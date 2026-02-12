@@ -205,6 +205,7 @@ export function CommandPalette() {
             'agent-timeline': '/agent-timeline',
             reports: '/reports',
             recordings: '/recordings',
+            transcriptions: '/transcriptions',
             wallboards: '/wallboards',
             admin: '/admin/settings',
           };
@@ -264,6 +265,15 @@ export function CommandPalette() {
         section: 'pages',
         keywords: 'recording audio playback',
         onSelect: () => trackAndExecute('recordings', 'Recordings', () => navigate('/recordings')),
+      },
+      {
+        id: 'transcriptions',
+        label: 'Transcriptions',
+        icon: <FileText className="h-4 w-4" />,
+        shortcut: 'G T',
+        section: 'pages',
+        keywords: 'transcription transcript text speech parakeet',
+        onSelect: () => trackAndExecute('transcriptions', 'Transcriptions', () => navigate('/transcriptions')),
       },
       {
         id: 'wallboards',

@@ -191,4 +191,13 @@ export const queryKeys = {
     all: ['skill-groups'] as const,
     detail: (id: string) => ['skill-groups', id] as const,
   },
+
+  // ── Transcriptions ──
+  transcriptions: {
+    all: ['transcriptions'] as const,
+    list: (filters: Record<string, unknown>) => ['transcriptions', filters] as const,
+    detail: (recordingId: string) => ['transcriptions', recordingId] as const,
+    stats: ['transcriptions', 'stats'] as const,
+    search: (query: string) => ['transcriptions', 'search', query] as const,
+  },
 } as const;
