@@ -549,8 +549,10 @@ Contributions are welcome! Please:
 
 ## Roadmap
 
+- [x] Speech-to-text transcription (Parakeet STT server, overview page, transcript viewer — needs end-to-end testing with live recordings)
+- [x] SAML SSO management UI (IdP config, attribute mapping, group-to-role mapping, SP metadata)
+- [x] 698 automated tests across 29 test files (stores, API routes, components, lib)
 - [ ] Agent real-time whisper/barge/listen controls
-- [ ] Speech-to-text transcription for recordings
 - [ ] Custom report builder (drag-and-drop columns)
 - [ ] Mobile-responsive dashboard
 - [ ] Prometheus metrics endpoint

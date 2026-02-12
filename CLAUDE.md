@@ -19,10 +19,10 @@ calldoc/
 ├── CLAUDE.md                          # This file - project guide for AI
 ├── DEPLOY.md                          # Deployment documentation
 ├── Dockerfile                         # Multi-stage Docker build (node:20-alpine)
-├── docker-compose.yml                 # Dev: app, postgres, redis, devlink3-sim, smdr-sim, mocksaml, minio
+├── docker-compose.yml                 # Dev: app, postgres, redis, devlink3-sim, smdr-sim, mocksaml, minio, transcription
 ├── docker-compose.prod.yml            # Prod overrides: no simulators, external DB, scaling
 ├── drizzle.config.ts                  # Drizzle Kit configuration
-├── next.config.ts                     # Next.js configuration
+├── next.config.mjs                    # Next.js configuration (ESM)
 ├── package.json                       # Dependencies and scripts
 ├── tsconfig.json                      # TypeScript strict config
 ├── vitest.config.ts                   # Vitest with happy-dom, @/ alias
@@ -47,7 +47,8 @@ calldoc/
 │
 ├── simulators/                        # Dev simulators for testing
 │   ├── devlink3/                      # DevLink3 protocol simulator
-│   └── smdr/                          # SMDR TCP simulator
+│   ├── smdr/                          # SMDR TCP simulator
+│   └── transcription/                 # Parakeet STT server (FastAPI, mock + NeMo modes)
 │
 ├── drizzle/                           # Migration files (auto-generated)
 │
@@ -65,6 +66,7 @@ calldoc/
     │   │   ├── calls/page.tsx         # Call log with C2G detail
     │   │   ├── agent-timeline/page.tsx # Agent timeline visualization
     │   │   ├── recordings/page.tsx    # Recording browser + player
+    │   │   ├── transcriptions/page.tsx # Transcription overview + search
     │   │   ├── reports/page.tsx       # Report generator + viewer
     │   │   ├── wallboards/
     │   │   │   ├── page.tsx           # Wallboard list
@@ -107,7 +109,13 @@ calldoc/
     │       │       ├── stream/route.ts # GET audio stream
     │       │       ├── notes/route.ts # POST add note
     │       │       ├── score/route.ts # POST QA scorecard
-    │       │       └── share/route.ts # POST create share link
+    │       │       ├── share/route.ts # POST create share link
+    │       │       └── transcript/
+    │       │           ├── route.ts       # GET/POST transcript
+    │       │           └── callback/route.ts # POST Parakeet callback
+    │       ├── transcriptions/
+    │       │   ├── route.ts           # GET transcription list
+    │       │   └── stats/route.ts     # GET transcription stats
     │       ├── wallboards/
     │       │   ├── route.ts           # GET list, POST create
     │       │   └── [id]/route.ts      # GET/PUT/DELETE
@@ -161,7 +169,9 @@ calldoc/
     │   │   ├── waveform-player.tsx    # wavesurfer.js integration
     │   │   ├── playback-controls.tsx
     │   │   ├── recording-notes.tsx
-    │   │   └── scorecard-panel.tsx
+    │   │   ├── scorecard-panel.tsx
+    │   │   ├── transcript-viewer.tsx  # Synchronized transcript playback
+    │   │   └── transcription-badge.tsx # Status badge component
     │   ├── providers/
     │   │   ├── query-provider.tsx     # TanStack Query provider
     │   │   └── socket-provider.tsx    # Socket.io provider
@@ -175,7 +185,11 @@ calldoc/
     │       ├── data-table.test.tsx
     │       ├── filter-builder.test.tsx
     │       ├── notification-center.test.tsx
-    │       └── event-bar.test.tsx
+    │       ├── event-bar.test.tsx
+    │       ├── status-badge.test.tsx
+    │       ├── command-palette.test.tsx
+    │       ├── connection-indicator.test.tsx
+    │       └── transcription-badge.test.tsx
     │
     ├── stores/                        # Zustand stores (real-time state)
     │   ├── call-store.ts              # Active calls + recent calls ring buffer
@@ -187,7 +201,10 @@ calldoc/
     │   └── __tests__/                 # Store test files
     │       ├── call-store.test.ts
     │       ├── agent-store.test.ts
-    │       └── dashboard-store.test.ts
+    │       ├── dashboard-store.test.ts
+    │       ├── group-store.test.ts
+    │       ├── ui-store.test.ts
+    │       └── wallboard-store.test.ts
     │
     ├── hooks/                         # React hooks
     │   ├── use-calls.ts               # TanStack Query hooks for calls
@@ -197,7 +214,8 @@ calldoc/
     │   ├── use-wallboards.ts          # Wallboard query hooks
     │   ├── use-admin.ts               # Admin query hooks
     │   ├── use-keyboard-shortcuts.ts  # Global keyboard shortcut handler
-    │   └── use-url-filters.ts         # nuqs URL filter sync
+    │   ├── use-url-filters.ts         # nuqs URL filter sync
+    │   └── use-transcriptions.ts      # Transcription TanStack Query hooks
     │
     ├── lib/
     │   ├── utils.ts                   # cn() tailwind merge utility
@@ -224,11 +242,14 @@ calldoc/
     │   │   ├── parser.ts              # CSV record parser
     │   │   ├── writer.ts              # Record writer to DB + Redis
     │   │   └── __tests__/
-    │   │       └── parser.test.ts
+    │   │       ├── parser.test.ts
+    │   │       └── writer.test.ts
     │   ├── correlation/                # Event correlation engine
     │   │   ├── engine.ts              # DevLink3 + SMDR matching
     │   │   ├── persist.ts             # DB write operations
-    │   │   └── agent-mapping.ts       # Extension -> agent resolution
+    │   │   ├── agent-mapping.ts       # Extension -> agent resolution
+    │   │   └── __tests__/
+    │   │       └── agent-mapping.test.ts
     │   ├── reports/                    # Report engine
     │   │   ├── engine.ts              # Report generation (20 templates)
     │   │   ├── templates.ts           # Template definitions + registry
@@ -245,7 +266,12 @@ calldoc/
     │   ├── socket/                     # Socket.io server setup
     │   ├── services/                   # Shared business logic
     │   ├── api/
-    │   │   └── validation.ts          # Zod request validation
+    │   │   ├── validation.ts          # Zod request validation
+    │   │   └── __tests__/
+    │   │       └── validation.test.ts
+    │   ├── auth/
+    │   │   └── __tests__/
+    │   │       └── middleware.test.ts
     │   ├── config/                     # Environment config
     │   ├── webhooks/                   # Outbound webhook delivery
     │   └── __tests__/                  # Integration test files
@@ -265,7 +291,8 @@ calldoc/
     │   ├── smdr.ts                    # SmdrRecord, SmdrDirection
     │   ├── socket-events.ts           # Socket.io event contracts
     │   ├── redis-events.ts            # Redis pub/sub message types
-    │   └── api.ts                     # PaginatedResponse, ApiError, queryKeys
+    │   ├── api.ts                     # PaginatedResponse, ApiError, queryKeys
+    │   └── transcriptions.ts         # Transcription types, segments, stats
     │
     └── test/                          # Test infrastructure
         ├── setup.ts                   # Vitest global setup (@testing-library/jest-dom)
@@ -364,6 +391,7 @@ Services in dev mode:
 - **smdr-sim** (:1150) - SMDR TCP simulator
 - **mocksaml** (:5225) - Mock SAML IdP
 - **minio** (:9000/:9001) - S3-compatible storage
+- **transcription** (:8000) - Parakeet STT server (mock mode by default)
 
 ## Key Architectural Decisions
 

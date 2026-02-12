@@ -45,10 +45,21 @@ When working on any feature, agents MUST read the relevant spec files before imp
 3. `spec/COMPONENT_ARCHITECTURE.md` - Recording component tree, API routes
 4. `spec/INTERACTION_DESIGN_SPEC.md` - Recording user flow
 
+#### Transcription (Speech-to-Text)
+1. `simulators/transcription/server.py` - FastAPI Parakeet STT server (mock + NeMo modes)
+2. `src/lib/db/schema/transcriptions.ts` - DB schema (transcriptions + transcription_search tables)
+3. `src/app/api/recordings/[id]/transcript/` - GET/POST transcript, callback from Parakeet
+4. `src/app/api/transcriptions/` - List and stats endpoints
+5. `src/hooks/use-transcriptions.ts` - TanStack Query hooks
+6. `src/components/recordings/transcript-viewer.tsx` - Synchronized playback viewer
+7. `src/components/recordings/transcription-badge.tsx` - Status badge
+
 #### Auth & Admin
 1. `spec/PROJECT_ROADMAP.md` - SAML config, user/role schema
 2. `spec/COMPONENT_ARCHITECTURE.md` - Auth routes, admin component tree
 3. `spec/INTERACTION_DESIGN_SPEC.md` - Login flow, admin page flows
+4. `src/app/(dashboard)/admin/settings/page.tsx` - Full SAML management UI
+5. `src/lib/auth/saml.ts` - SAML strategy, attribute mapping, group-role mapping
 
 #### Database & Schema
 1. `spec/PROJECT_ROADMAP.md` - Full DB schema (PostgreSQL 16, Drizzle ORM)
@@ -86,6 +97,50 @@ When working on any feature, agents MUST read the relevant spec files before imp
 - PCI pause/resume
 - Admin pages (users, settings, recording rules, storage pools)
 - SAML auth integration
+
+## Implementation Status
+
+### Completed (Sprint 1-4 + Post-Sprint)
+- [x] DevLink3 TCP connector with SHA1 auth and Delta3 XML parser
+- [x] SMDR TCP listener + CSV parser
+- [x] Call correlation engine (DevLink3 + SMDR matching)
+- [x] Redis pub/sub event distribution + Socket.io server
+- [x] Dashboard with 17 widget types + drag-and-drop layout
+- [x] Cradle-to-Grave call detail with event timeline
+- [x] Agent Timeline Gantt-chart visualization
+- [x] 20 report templates with CSV/XLSX/PDF export
+- [x] Recording browser with waveform player (wavesurfer.js)
+- [x] PCI pause/resume for payment card compliance
+- [x] Quality scorecards for QA review
+- [x] Wallboard editor with full-screen display mode
+- [x] Local auth (bcryptjs + iron-session) + SAML 2.0 SSO
+- [x] Admin settings with SAML management UI (two-column layout)
+- [x] Command palette (Cmd+K) with keyboard shortcuts
+- [x] Parakeet speech-to-text transcription server (mock + NeMo)
+- [x] Transcription overview page with search and stats
+- [x] Transcript viewer with synchronized playback highlighting
+- [x] 698 automated tests across 29 test files
+
+### In Progress / Needs Testing
+- [ ] Transcription end-to-end with live recordings (server works, UI works, needs integration test)
+- [ ] SAML SLO (Single Logout) — UI field exists, backend not wired
+
+### Not Started
+- [ ] Agent whisper/barge/listen controls
+- [ ] Custom report builder
+- [ ] Mobile-responsive dashboard
+- [ ] Prometheus metrics endpoint
+- [ ] LDAP/AD sync
+- [ ] Multi-tenant support
+
+## Test Coverage (29 files, 698 tests)
+
+| Area | Files | Tests |
+|------|-------|-------|
+| Stores (6/6) | call, agent, dashboard, group, ui, wallboard | 172 |
+| Components (8) | data-table, filter-builder, notification-center, event-bar, status-badge, command-palette, connection-indicator, transcription-badge | 200 |
+| API Routes (6) | agents, calls, transcriptions, transcriptions-stats, transcript, admin-settings | 167 |
+| Lib/Protocol (7) | devlink3 auth+parser, smdr parser+writer, correlation engine+agent-mapping, validation | 159 |
 
 ## File Structure Convention
 ```
