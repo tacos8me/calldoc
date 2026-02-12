@@ -103,8 +103,6 @@ Chronicall (Xima) and TASKE are the standard reporting platforms for Avaya IP Of
 
 ## Screenshots
 
-> **Note:** Replace these placeholders with actual screenshots of your running instance.
-
 ### Dashboard
 <!-- Screenshot: Main dashboard with KPI widgets, agent grid, and chart -->
 <p align="center">
