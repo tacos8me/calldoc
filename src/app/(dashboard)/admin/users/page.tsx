@@ -2,6 +2,7 @@
 
 import { useState, useMemo, useCallback } from 'react';
 import { cn } from '@/lib/utils';
+import { useUIStore } from '@/stores/ui-store';
 import {
   Search,
   Plus,
@@ -114,7 +115,8 @@ function formatLastLogin(iso: string | null): string {
 // ---------------------------------------------------------------------------
 
 export default function AdminUsersPage() {
-  const [users, setUsers] = useState<MockUser[]>(MOCK_USERS);
+  const demoMode = useUIStore((s) => s.demoMode);
+  const [users, setUsers] = useState<MockUser[]>(demoMode ? MOCK_USERS : []);
   const [search, setSearch] = useState('');
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editUser, setEditUser] = useState<MockUser | null>(null);

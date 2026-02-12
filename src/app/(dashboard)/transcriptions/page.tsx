@@ -21,6 +21,7 @@ import {
   Phone,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useUIStore } from '@/stores/ui-store';
 
 // ---------------------------------------------------------------------------
 // Types (provided by another team -- imported inline until barrel available)
@@ -396,7 +397,7 @@ function StatCard({
 
 function TranscriptionsSkeleton() {
   return (
-    <div className="mx-auto max-w-7xl space-y-6">
+    <div className="space-y-6">
       {/* Stats skeleton */}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {Array.from({ length: 4 }).map((_, i) => (
@@ -494,6 +495,8 @@ function HighlightedSnippet({ snippet, query }: { snippet: string; query: string
 const PAGE_SIZE = 15;
 
 export default function TranscriptionsPage() {
+  const demoMode = useUIStore((s) => s.demoMode);
+
   // Search state
   const [searchQuery, setSearchQuery] = useState('');
   const debouncedSearch = useDebouncedValue(searchQuery, 300);
@@ -515,8 +518,11 @@ export default function TranscriptionsPage() {
   // Loading/demo state
   const [isLoading, setIsLoading] = useState(true);
 
-  // Generate mock data once
-  const allTranscriptions = useMemo(() => generateMockTranscriptions(80), []);
+  // Generate mock data in demo mode only
+  const allTranscriptions = useMemo(
+    () => demoMode ? generateMockTranscriptions(80) : [],
+    [demoMode],
+  );
   const enrichedRows = useMemo(() => enrichTranscriptions(allTranscriptions), [allTranscriptions]);
 
   // Simulate initial load
@@ -525,8 +531,17 @@ export default function TranscriptionsPage() {
     return () => clearTimeout(timer);
   }, []);
 
-  // Stats (mock)
-  const stats = MOCK_STATS;
+  // Stats (mock in demo mode, zeros otherwise)
+  const stats: TranscriptionStats = demoMode ? MOCK_STATS : {
+    totalTranscriptions: 0,
+    completed: 0,
+    pending: 0,
+    processing: 0,
+    failed: 0,
+    averageConfidence: 0,
+    totalWordCount: 0,
+    averageProcessingTime: 0,
+  };
 
   // Search results
   const searchResults = useMemo(() => {
@@ -605,7 +620,7 @@ export default function TranscriptionsPage() {
   }
 
   return (
-    <div className="mx-auto max-w-7xl space-y-6">
+    <div className="space-y-6">
       {/* ── Header ──────────────────────────────────────── */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>

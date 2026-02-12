@@ -634,18 +634,24 @@ export default function AgentTimelinePage() {
 }
 
 function AgentTimelinePageInner() {
-  // Generate mock data once (fallback)
-  const mockData = React.useMemo(() => generateMockAgentTimeline(), []);
+  // Demo mode flag
+  const demoMode = useUIStore((s) => s.demoMode);
+
+  // Generate mock data once (only in demo mode)
+  const mockData = React.useMemo(
+    () => demoMode ? generateMockAgentTimeline() : [],
+    [demoMode],
+  );
 
   // URL-synced filters
   const [urlFilters, urlSetters] = useAgentTimelineFilters();
 
-  // Fetch agents from API
+  // Fetch agents from API (skip in demo mode)
   const {
     data: apiAgents,
     isLoading: agentsLoading,
     isError: agentsError,
-  } = useAgentList();
+  } = useAgentList({ enabled: !demoMode });
 
   // Real-time agents from Zustand store
   const storeAgents = useAgentsFromStore();
@@ -658,10 +664,11 @@ function AgentTimelinePageInner() {
   const allAgents = React.useMemo(() => {
     if (storeAgents.length > 0) return storeAgents;
     if (apiAgents && apiAgents.length > 0) return apiAgents;
-    return mockData.map((d) => d.agent);
-  }, [storeAgents, apiAgents, mockData]);
+    if (demoMode) return mockData.map((d) => d.agent);
+    return [];
+  }, [storeAgents, apiAgents, mockData, demoMode]);
 
-  const isUsingMock = storeAgents.length === 0 && (!apiAgents || apiAgents.length === 0);
+  const isUsingMock = demoMode && storeAgents.length === 0 && (!apiAgents || apiAgents.length === 0);
 
   // Filter agents by group from URL filter
   const filteredByGroup = React.useMemo(() => {
@@ -734,15 +741,18 @@ function AgentTimelinePageInner() {
     firstSelectedId,
     timeRange.from.toISOString(),
     timeRange.to.toISOString(),
+    { enabled: !demoMode },
   );
 
   // Build timeline map: agentId -> entries
-  // Use API data if available, otherwise mock
+  // Use API data if available, otherwise mock (only in demo mode)
   const timelineMap = React.useMemo(() => {
     const map = new Map<string, AgentTimelineEntry[]>();
 
-    // Always populate from mock as baseline fallback
-    mockData.forEach((d) => map.set(d.agent.id, d.timeline));
+    // Populate from mock data only in demo mode
+    if (demoMode) {
+      mockData.forEach((d) => map.set(d.agent.id, d.timeline));
+    }
 
     // Overlay API data if available
     if (apiTimeline && apiTimeline.length > 0 && firstSelectedId) {
@@ -750,7 +760,7 @@ function AgentTimelinePageInner() {
     }
 
     return map;
-  }, [mockData, apiTimeline, firstSelectedId]);
+  }, [demoMode, mockData, apiTimeline, firstSelectedId]);
 
   // Compute view window based on time range and zoom
   const viewStart = timeRange.from.getTime();

@@ -2,6 +2,7 @@
 
 import { useState, useCallback } from 'react';
 import { cn } from '@/lib/utils';
+import { useUIStore } from '@/stores/ui-store';
 import {
   ChevronLeft,
   Plus,
@@ -107,7 +108,8 @@ function getCapacityLabel(pct: number): string {
 // ---------------------------------------------------------------------------
 
 export default function StoragePoolsPage() {
-  const [pools, setPools] = useState<StoragePoolMock[]>(MOCK_POOLS);
+  const demoMode = useUIStore((s) => s.demoMode);
+  const [pools, setPools] = useState<StoragePoolMock[]>(demoMode ? MOCK_POOLS : []);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [saving, setSaving] = useState(false);
   const [testResult, setTestResult] = useState<'idle' | 'testing' | 'success' | 'error'>('idle');

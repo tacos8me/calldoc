@@ -20,6 +20,8 @@ interface UIStoreState {
   connectionStatus: ConnectionStatus;
   /** Round-trip latency in ms */
   latency: number;
+  /** Whether the dashboard is showing demo data (no live PBX) */
+  demoMode: boolean;
 }
 
 interface UIStoreActions {
@@ -31,6 +33,7 @@ interface UIStoreActions {
   setActiveModal: (id: string | null) => void;
   setConnectionStatus: (status: ConnectionStatus) => void;
   setLatency: (ms: number) => void;
+  setDemoMode: (demo: boolean) => void;
 }
 
 type UIStore = UIStoreState & UIStoreActions;
@@ -42,6 +45,7 @@ export const useUIStore = create<UIStore>()((set) => ({
   activeModal: null,
   connectionStatus: 'disconnected',
   latency: 0,
+  demoMode: false,
 
   toggleSidebar: () =>
     set((s) => ({ sidebarCollapsed: !s.sidebarCollapsed })),
@@ -60,4 +64,6 @@ export const useUIStore = create<UIStore>()((set) => ({
   setConnectionStatus: (status) => set({ connectionStatus: status }),
 
   setLatency: (ms) => set({ latency: ms }),
+
+  setDemoMode: (demo) => set({ demoMode: demo }),
 }));

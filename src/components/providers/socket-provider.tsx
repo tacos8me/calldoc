@@ -8,6 +8,7 @@ import { useAgentStore } from '@/stores/agent-store';
 import { useUIStore } from '@/stores/ui-store';
 import { useGroupStore } from '@/stores/group-store';
 import { useNotificationStore } from '@/components/shared/notification-center';
+import { startDemoMode, stopDemoMode, isDemoRunning } from '@/lib/demo/data';
 import type { Call, AgentStateUpdate, GroupStats, AlertNotification, SystemStatus } from '@/types';
 
 // ---------------------------------------------------------------------------
@@ -252,6 +253,35 @@ export function SocketProvider({ children }: { children: React.ReactNode }) {
 
     prevConnected.current = isConnected;
   }, [isConnected]);
+
+  // Start demo mode when not connected to a live PBX after a brief delay
+  useEffect(() => {
+    if (isConnected) {
+      // Connected to live PBX -- stop demo if running
+      if (isDemoRunning()) {
+        stopDemoMode();
+      }
+      return;
+    }
+
+    // Wait 3 seconds before starting demo mode (give socket time to connect)
+    const timer = setTimeout(() => {
+      if (!isDemoRunning()) {
+        startDemoMode();
+      }
+    }, 3000);
+
+    return () => clearTimeout(timer);
+  }, [isConnected]);
+
+  // Cleanup demo mode on unmount
+  useEffect(() => {
+    return () => {
+      if (isDemoRunning()) {
+        stopDemoMode();
+      }
+    };
+  }, []);
 
   const contextValue: SocketContextValue = {
     ...socketReturn,

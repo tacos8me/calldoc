@@ -34,6 +34,7 @@ import {
 } from '@/components/recordings';
 import type { WaveformAnnotation } from '@/components/recordings/waveform-player';
 import { toast } from 'sonner';
+import { useUIStore } from '@/stores/ui-store';
 import {
   useRecordings,
   useRecording,
@@ -279,6 +280,7 @@ function MiniWaveform({ seed }: { seed: string }) {
 // ---------------------------------------------------------------------------
 
 export default function RecordingsPage() {
+  const demoMode = useUIStore((s) => s.demoMode);
   const [search, setSearch] = useState('');
   const [filterScored, setFilterScored] = useState<'all' | 'scored' | 'unscored'>('all');
   const [expandedId, setExpandedId] = useState<string | null>(null);
@@ -312,8 +314,8 @@ export default function RecordingsPage() {
     return null;
   }, [apiData]);
 
-  const useMock = !apiRecordings;
-  const allRecordings = apiRecordings ?? MOCK_RECORDINGS;
+  const useMock = demoMode && !apiRecordings;
+  const allRecordings = useMock ? MOCK_RECORDINGS : (apiRecordings ?? []);
 
   // Filtered recordings (client-side filtering for mock mode)
   const filtered = useMemo(() => {
@@ -357,7 +359,7 @@ export default function RecordingsPage() {
         text: n.text,
         createdAt: n.createdAt,
       }))
-    : MOCK_NOTES;
+    : demoMode ? MOCK_NOTES : [];
 
   // Create note mutation
   const createNoteMutation = useCreateRecordingNote(expandedId ?? '');
@@ -447,7 +449,7 @@ export default function RecordingsPage() {
   const scoredCount = allRecordings.filter((r) => r.score !== null).length;
 
   return (
-    <div className="mx-auto max-w-7xl space-y-6">
+    <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>

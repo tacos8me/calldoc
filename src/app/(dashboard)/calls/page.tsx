@@ -738,6 +738,7 @@ export default function CallsPage() {
   // Real-time active calls from Zustand store
   const liveCalls = useActiveCalls();
   const connectionStatus = useUIStore((s) => s.connectionStatus);
+  const demoMode = useUIStore((s) => s.demoMode);
   const isSocketConnected = connectionStatus === 'connected';
 
   // State
@@ -816,7 +817,7 @@ export default function CallsPage() {
 
   // Determine which data to use: merge live calls + API data, or mock fallback
   const apiCalls = apiData?.data;
-  const useMock = !apiCalls || apiCalls.length === 0;
+  const useMock = demoMode && (!apiCalls || apiCalls.length === 0);
 
   // Merge live calls at the top of the list when connected
   const displayCalls = React.useMemo(() => {
@@ -830,12 +831,13 @@ export default function CallsPage() {
       return mockCalls;
     }
     // In API mode, merge live calls on top
+    const realCalls = apiCalls ?? [];
     if (liveCalls.length > 0) {
       const liveIds = new Set(liveCalls.map((c) => c.id));
-      const deduped = apiCalls.filter((c) => !liveIds.has(c.id));
+      const deduped = realCalls.filter((c) => !liveIds.has(c.id));
       return [...liveCalls, ...deduped];
     }
-    return apiCalls;
+    return realCalls;
   }, [useMock, mockCalls, apiCalls, liveCalls]);
 
   const eventsMap = useMock ? mockEventsMap : new Map<string, CallEvent[]>();

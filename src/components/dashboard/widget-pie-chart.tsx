@@ -30,7 +30,7 @@ export interface PieChartWidgetProps {
   className?: string;
 }
 
-const MOCK_DATA: PieChartDataPoint[] = [
+export const DEMO_PIE_DATA: PieChartDataPoint[] = [
   { name: 'Sales', value: 42 },
   { name: 'Support', value: 35 },
   { name: 'Billing', value: 18 },
@@ -64,14 +64,15 @@ function PieCustomTooltip({ active, payload }: CustomTooltipProps) {
 }
 
 export function PieChartWidget({
-  data = MOCK_DATA,
+  data,
   donut = true,
   centerLabel,
   className,
 }: PieChartWidgetProps) {
   const [activeIndex, setActiveIndex] = useState<number | null>(null);
 
-  const total = data.reduce((sum, d) => sum + d.value, 0);
+  const chartData = data ?? [];
+  const total = chartData.reduce((sum, d) => sum + d.value, 0);
   const displayCenterLabel = centerLabel ?? String(total);
 
   const onMouseEnter = useCallback((_: unknown, index: number) => {
@@ -82,7 +83,7 @@ export function PieChartWidget({
     setActiveIndex(null);
   }, []);
 
-  if (data.length === 0) {
+  if (chartData.length === 0) {
     return (
       <div className={cn('flex items-center justify-center h-full text-body-sm text-content-tertiary', className)}>
         No chart data
@@ -95,7 +96,7 @@ export function PieChartWidget({
       <ResponsiveContainer width="100%" height="100%">
         <PieChart>
           <Pie
-            data={data}
+            data={chartData}
             dataKey="value"
             nameKey="name"
             cx="50%"
@@ -108,7 +109,7 @@ export function PieChartWidget({
             onMouseEnter={onMouseEnter}
             onMouseLeave={onMouseLeave}
           >
-            {data.map((_, index) => (
+            {chartData.map((_, index) => (
               <Cell
                 key={`cell-${index}`}
                 fill={CHART_COLORS[index % CHART_COLORS.length]}
@@ -134,10 +135,10 @@ export function PieChartWidget({
         <div className="absolute inset-0 flex items-center justify-center pointer-events-none" style={{ paddingBottom: 28 }}>
           <div className="flex flex-col items-center -mt-[5%]">
             <span className="text-display-sm font-mono text-content-primary tabular-nums">
-              {activeIndex !== null ? data[activeIndex].value : displayCenterLabel}
+              {activeIndex !== null ? chartData[activeIndex].value : displayCenterLabel}
             </span>
             <span className="text-caption text-content-tertiary">
-              {activeIndex !== null ? data[activeIndex].name : 'Total'}
+              {activeIndex !== null ? chartData[activeIndex].name : 'Total'}
             </span>
           </div>
         </div>

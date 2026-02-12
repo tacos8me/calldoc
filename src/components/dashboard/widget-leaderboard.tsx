@@ -30,7 +30,7 @@ const RANK_ACCENTS: Record<number, string> = {
   3: '#CD7F32', // bronze
 };
 
-const MOCK_ENTRIES: LeaderboardEntry[] = [
+export const DEMO_LEADERBOARD_ENTRIES: LeaderboardEntry[] = [
   { rank: 1, agentName: 'Sarah Johnson', value: 47 },
   { rank: 2, agentName: 'Michael Chen', value: 42 },
   { rank: 3, agentName: 'Emily Davis', value: 38 },
@@ -45,11 +45,11 @@ const MOCK_ENTRIES: LeaderboardEntry[] = [
 
 export function LeaderboardWidget({
   metricLabel = 'Calls Handled',
-  entries = MOCK_ENTRIES,
+  entries,
   maxItems = 10,
   formatValue,
 }: LeaderboardWidgetProps) {
-  const displayEntries = entries.slice(0, maxItems);
+  const displayEntries = (entries ?? []).slice(0, maxItems);
   const maxValue = displayEntries.length > 0 ? displayEntries[0].value : 1;
 
   if (displayEntries.length === 0) {

@@ -29,11 +29,12 @@ async function fetchJson<T>(url: string): Promise<T> {
  * staleTime: Infinity because the Zustand agent store is source of truth
  * for real-time state. This query is used for the initial agent list only.
  */
-export function useAgentList() {
+export function useAgentList(options?: { enabled?: boolean }) {
   return useQuery<Agent[], ApiError>({
     queryKey: queryKeys.agents.list(),
     queryFn: () => fetchJson<Agent[]>('/api/agents'),
     staleTime: Infinity,
+    enabled: options?.enabled ?? true,
   });
 }
 
@@ -56,6 +57,7 @@ export function useAgentTimeline(
   agentId: string | null,
   from: string | null,
   to: string | null,
+  options?: { enabled?: boolean },
 ) {
   const dateKey = from && to ? `${from}_${to}` : '';
 
@@ -69,6 +71,6 @@ export function useAgentTimeline(
         `/api/agents/${agentId}/timeline?${params.toString()}`,
       );
     },
-    enabled: !!agentId && !!from && !!to,
+    enabled: (options?.enabled ?? true) && !!agentId && !!from && !!to,
   });
 }

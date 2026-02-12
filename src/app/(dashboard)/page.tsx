@@ -26,7 +26,9 @@ import { ActiveCallsWidget } from '@/components/dashboard/widget-active-calls';
 import { AgentBoxWidget } from '@/components/dashboard/widget-agent-box';
 import { GaugeWidget } from '@/components/dashboard/widget-gauge';
 import { ChartWidget } from '@/components/dashboard/widget-chart';
-import { GroupBoxWidget, type GroupBoxData } from '@/components/dashboard/widget-group-box';
+import { GroupBoxWidget, DEMO_GROUP_DATA, type GroupBoxData } from '@/components/dashboard/widget-group-box';
+import { LeaderboardWidget, DEMO_LEADERBOARD_ENTRIES } from '@/components/dashboard/widget-leaderboard';
+import { PieChartWidget, DEMO_PIE_DATA } from '@/components/dashboard/widget-pie-chart';
 import {
   useDashboardMetrics,
   getMetricValue,
@@ -152,11 +154,11 @@ function DataModeIndicator({ isLive }: { isLive: boolean }) {
 // GroupBoxBridge -- reads from group store for a specific group widget
 // ---------------------------------------------------------------------------
 
-function GroupBoxBridge({ groupId }: { groupId?: string }) {
+function GroupBoxBridge({ groupId, demoMode }: { groupId?: string; demoMode: boolean }) {
   const stats = useGroupStats(groupId ?? '');
 
   if (!stats) {
-    return <GroupBoxWidget />;
+    return <GroupBoxWidget data={demoMode ? DEMO_GROUP_DATA : undefined} />;
   }
 
   const data: GroupBoxData = {
@@ -180,6 +182,7 @@ function renderWidgetContent(
   widget: Widget,
   metrics: DashboardMetrics,
   chartData: TimeSeriesPoint[],
+  demoMode: boolean,
 ) {
   const metricName = widget.config.metric ?? '';
   const metricValue = getMetricValue(metrics, metricName);
@@ -222,7 +225,19 @@ function renderWidgetContent(
         />
       );
     case 'group-box':
-      return <GroupBoxBridge groupId={widget.config.groups?.[0]} />;
+      return <GroupBoxBridge groupId={widget.config.groups?.[0]} demoMode={demoMode} />;
+    case 'leaderboard':
+      return (
+        <LeaderboardWidget
+          entries={demoMode ? DEMO_LEADERBOARD_ENTRIES : undefined}
+        />
+      );
+    case 'pie-chart':
+      return (
+        <PieChartWidget
+          data={demoMode ? DEMO_PIE_DATA : undefined}
+        />
+      );
     default:
       return (
         <div className="flex items-center justify-center h-full text-body-sm text-content-tertiary">
@@ -307,6 +322,7 @@ export default function DashboardPage() {
   const activeCallCount = useActiveCallCount();
   const connectionStatus = useUIStore((s) => s.connectionStatus);
   const latency = useUIStore((s) => s.latency);
+  const demoMode = useUIStore((s) => s.demoMode);
 
   // Dashboard metrics from the bridge
   const { metrics, chartData, getMetric } = useDashboardMetrics();
@@ -482,7 +498,7 @@ export default function DashboardPage() {
                 {editMode && (
                   <div className="drag-handle absolute top-0 left-0 right-0 h-10 cursor-grab active:cursor-grabbing z-10" />
                 )}
-                {renderWidgetContent(widget, metrics, chartData)}
+                {renderWidgetContent(widget, metrics, chartData, demoMode)}
               </WidgetContainer>
               {/* Remove button (edit mode) */}
               {editMode && (

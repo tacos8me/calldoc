@@ -481,7 +481,7 @@ export default function AdminSettingsPage() {
   const samlSaving = updateMutation.isPending;
 
   return (
-    <div className="mx-auto max-w-7xl space-y-6">
+    <div className="space-y-6">
       {/* Toast */}
       <ToastNotification toast={toast} onDismiss={dismissToast} />
 

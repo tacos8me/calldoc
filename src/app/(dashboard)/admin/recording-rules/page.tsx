@@ -2,6 +2,7 @@
 
 import { useState, useCallback } from 'react';
 import { cn } from '@/lib/utils';
+import { useUIStore } from '@/stores/ui-store';
 import {
   ChevronLeft,
   Plus,
@@ -123,7 +124,8 @@ const MOCK_RULES: RecordingRuleMock[] = [
 // ---------------------------------------------------------------------------
 
 export default function RecordingRulesPage() {
-  const [rules, setRules] = useState<RecordingRuleMock[]>(MOCK_RULES);
+  const demoMode = useUIStore((s) => s.demoMode);
+  const [rules, setRules] = useState<RecordingRuleMock[]>(demoMode ? MOCK_RULES : []);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [saving, setSaving] = useState(false);
 

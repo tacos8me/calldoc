@@ -4,6 +4,7 @@ import { useEffect, useRef, useMemo, useState, useCallback } from 'react';
 import { useCallStore } from '@/stores/call-store';
 import { useAgentStore } from '@/stores/agent-store';
 import { useGroupStore, type GroupStatsEntry } from '@/stores/group-store';
+import { useUIStore } from '@/stores/ui-store';
 import type { Call, Agent, AgentState } from '@/types';
 
 // ---------------------------------------------------------------------------
@@ -261,6 +262,8 @@ export function useDashboardMetrics(): {
     [groupsMap],
   );
 
+  const demoMode = useUIStore((s) => s.demoMode);
+
   const hasRealData =
     activeCallsMap.size > 0 || agentsMap.size > 0 || groupsMap.size > 0;
 
@@ -278,10 +281,11 @@ export function useDashboardMetrics(): {
 
     return {
       ...computed,
-      isLive: true,
+      // Live only when we have real data AND not in demo mode
+      isLive: hasRealData && !demoMode,
       lastUpdated: new Date().toISOString(),
     };
-  }, [hasRealData, activeCalls, recentCalls, agentsArray, groupStats]);
+  }, [hasRealData, demoMode, activeCalls, recentCalls, agentsArray, groupStats]);
 
   // Chart data managed via interval + refs
   const metricsRef = useRef(metrics);
@@ -295,20 +299,38 @@ export function useDashboardMetrics(): {
     // Seed initial chart point
     if (chartDataRef.current.length === 0) {
       const m = metricsRef.current;
-      const initial: TimeSeriesPoint = {
-        label: new Date().toLocaleTimeString('en-US', {
-          hour: '2-digit',
-          minute: '2-digit',
-        }),
-        activeCalls: m.totalActiveCalls,
-        callsInQueue: m.callsInQueue,
-        agentsAvailable: m.agentsAvailable,
-      };
-      chartDataRef.current = [initial];
-      setChartData([initial]);
+
+      // In demo mode, seed several historical points for a richer chart
+      if (demoMode) {
+        const points: TimeSeriesPoint[] = [];
+        for (let i = 11; i >= 0; i--) {
+          const t = new Date(Date.now() - i * CHART_INTERVAL_MS);
+          points.push({
+            label: t.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }),
+            activeCalls: m.totalActiveCalls + Math.floor(Math.random() * 6 - 3),
+            callsInQueue: Math.max(0, m.callsInQueue + Math.floor(Math.random() * 4 - 2)),
+            agentsAvailable: Math.max(1, m.agentsAvailable + Math.floor(Math.random() * 4 - 2)),
+          });
+        }
+        chartDataRef.current = points;
+        setChartData(points);
+      } else {
+        const initial: TimeSeriesPoint = {
+          label: new Date().toLocaleTimeString('en-US', {
+            hour: '2-digit',
+            minute: '2-digit',
+          }),
+          activeCalls: m.totalActiveCalls,
+          callsInQueue: m.callsInQueue,
+          agentsAvailable: m.agentsAvailable,
+        };
+        chartDataRef.current = [initial];
+        setChartData([initial]);
+      }
     }
 
     // Periodic chart updates
+    const chartInterval = demoMode ? 10_000 : CHART_INTERVAL_MS;
     const interval = setInterval(() => {
       const m = metricsRef.current;
       const point: TimeSeriesPoint = {
@@ -323,10 +345,10 @@ export function useDashboardMetrics(): {
       const next = [...chartDataRef.current, point].slice(-MAX_CHART_POINTS);
       chartDataRef.current = next;
       setChartData(next);
-    }, CHART_INTERVAL_MS);
+    }, chartInterval);
 
     return () => clearInterval(interval);
-  }, [hasRealData]);
+  }, [hasRealData, demoMode]);
 
   const getMetric = useCallback(
     (name: string) => getMetricValue(metrics, name),

@@ -39,7 +39,7 @@ function getServiceLevelColor(percent: number): string {
   return STATUS_COLORS.danger;
 }
 
-const MOCK_DATA: GroupBoxData = {
+export const DEMO_GROUP_DATA: GroupBoxData = {
   groupName: 'Sales Queue',
   agentsAvailable: 5,
   agentsBusy: 7,
@@ -49,7 +49,15 @@ const MOCK_DATA: GroupBoxData = {
   serviceLevel: 87,
 };
 
-export function GroupBoxWidget({ data = MOCK_DATA }: GroupBoxWidgetProps) {
+export function GroupBoxWidget({ data }: GroupBoxWidgetProps) {
+  if (!data) {
+    return (
+      <div className="flex items-center justify-center h-full text-body-sm text-content-tertiary">
+        No group data
+      </div>
+    );
+  }
+
   const callsColor = getCallsWaitingColor(data.callsWaiting);
   const slColor = getServiceLevelColor(data.serviceLevel);
 
