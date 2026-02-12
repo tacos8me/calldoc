@@ -278,7 +278,7 @@ export function TimeRangeSelector({
   }, [value, activePreset]);
 
   return (
-    <div className={cn('relative', className)} ref={popoverRef}>
+    <div className={cn('relative flex items-center gap-2', className)} ref={popoverRef}>
       <button
         onClick={() => setOpen(!open)}
         className="flex items-center gap-2 rounded-md border border-border bg-surface-elevated px-3 py-2 text-body-sm text-content-primary hover:border-border-strong transition-colors"
@@ -291,7 +291,7 @@ export function TimeRangeSelector({
       {showNowButton && onNow && (
         <button
           onClick={onNow}
-          className="ml-2 inline-flex items-center gap-1.5 rounded-md bg-status-success/10 px-3 py-2 text-caption font-medium text-status-success hover:bg-status-success/20 transition-colors"
+          className="inline-flex items-center gap-1.5 rounded-md bg-status-success/10 px-3 py-2 text-caption font-medium text-status-success hover:bg-status-success/20 transition-colors"
         >
           <span className="h-2 w-2 animate-pulse rounded-full bg-status-success" />
           Now
