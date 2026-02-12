@@ -11,7 +11,7 @@ Dockerfile
 .dockerignore
 npm-debug.log*
 .DS_Store
-drizzle/
+drizzle/*.db
 *.db
 coverage/
 .vscode/

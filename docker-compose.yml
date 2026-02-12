@@ -31,7 +31,7 @@ services:
       - SESSION_SECRET=${SESSION_SECRET:-change-me-in-production}
       - SESSION_MAX_AGE=${SESSION_MAX_AGE:-43200}
       - SESSION_IDLE_TIMEOUT=${SESSION_IDLE_TIMEOUT:-1800}
-      - TRANSCRIPTION_URL=http://transcription:8000
+      - TRANSCRIPTION_URL=${TRANSCRIPTION_URL:-http://transcription:8000}
     depends_on:
       postgres:
         condition: service_healthy
@@ -161,6 +161,11 @@ services:
     volumes:
       - minio_data:/data
     command: server /data --console-address ":9001"
+    healthcheck:
+      test: ['CMD', 'mc', 'ready', 'local']
+      interval: 10s
+      timeout: 5s
+      retries: 5
     restart: unless-stopped
     mem_limit: 512m
     cpus: 0.5

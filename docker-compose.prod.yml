@@ -22,8 +22,6 @@ services:
       - DATABASE_URL=${DATABASE_URL:?DATABASE_URL is required for production}
       - REDIS_URL=${REDIS_URL:?REDIS_URL is required for production}
       - SESSION_SECRET=${SESSION_SECRET:?SESSION_SECRET is required for production}
-      - NEXTAUTH_URL=${NEXTAUTH_URL:?NEXTAUTH_URL is required for production}
-      - NEXTAUTH_SECRET=${NEXTAUTH_SECRET:?NEXTAUTH_SECRET is required for production}
       - SAML_ENTRY_POINT=${SAML_ENTRY_POINT:-}
       - SAML_ISSUER=${SAML_ISSUER:-calldoc}
       - SAML_CALLBACK_URL=${SAML_CALLBACK_URL:-}
