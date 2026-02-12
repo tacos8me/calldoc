@@ -145,12 +145,12 @@ Chronicall (Xima) and TASKE are the standard reporting platforms for Avaya IP Of
 </p>
 <p align="center"><em>Full-screen wallboard mode designed for lobby and contact center wall displays</em></p>
 
-### Admin Panel
-<!-- Screenshot: Admin settings with user management -->
+### Admin Settings
+<!-- Screenshot: Admin settings with SAML SSO configuration -->
 <p align="center">
-  <img src="docs/screenshots/admin.png" alt="Admin — User management, settings, and alert rules" width="900" />
+  <img src="docs/screenshots/admin.png" alt="Admin — System settings with DevLink3, SMDR, and SAML SSO configuration" width="900" />
 </p>
-<p align="center"><em>Administration panel with user management, system settings, alert rules, and audit log</em></p>
+<p align="center"><em>Two-column settings layout with DevLink3/SMDR connection config and full SAML SSO management — attribute mapping, group-to-role mapping, and SP metadata</em></p>
 
 ---
 

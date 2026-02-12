@@ -117,6 +117,77 @@ export function useUpdateUser(id: string) {
 }
 
 // ---------------------------------------------------------------------------
+// Admin Settings Response Types
+// ---------------------------------------------------------------------------
+
+export interface SamlConfigResponse {
+  id: string;
+  name: string;
+  entityId: string;
+  ssoUrl: string;
+  sloUrl: string | null;
+  signatureAlgorithm: string | null;
+  digestAlgorithm: string | null;
+  attributeMapping: Record<string, string>;
+  groupRoleMapping: Record<string, string>;
+  active: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface SystemConfigResponse {
+  id: string;
+  name: string;
+  description: string | null;
+  devlinkHost: string;
+  devlinkPort: number;
+  devlinkUseTls: boolean;
+  devlinkTlsPort: number | null;
+  devlinkUsername: string;
+  smdrHost: string | null;
+  smdrPort: number;
+  smdrEnabled: boolean;
+  timezone: string;
+  active: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface AdminSettingsResponse {
+  data: {
+    systems: SystemConfigResponse[];
+    saml: SamlConfigResponse[];
+  };
+}
+
+export interface UpdateSettingsPayload {
+  system?: {
+    id?: string;
+    name?: string;
+    devlinkHost?: string;
+    devlinkPort?: number;
+    devlinkUseTls?: boolean;
+    devlinkUsername?: string;
+    devlinkPassword?: string;
+    smdrHost?: string;
+    smdrPort?: number;
+    smdrEnabled?: boolean;
+    timezone?: string;
+  };
+  saml?: {
+    id?: string;
+    name?: string;
+    entityId?: string;
+    ssoUrl?: string;
+    sloUrl?: string;
+    certificate?: string;
+    active?: boolean;
+    attributeMapping?: Record<string, string>;
+    groupRoleMapping?: Record<string, string>;
+  };
+}
+
+// ---------------------------------------------------------------------------
 // System Settings Hooks
 // ---------------------------------------------------------------------------
 
@@ -127,6 +198,16 @@ export function useSystemSettings() {
   return useQuery<SystemSettings, ApiError>({
     queryKey: queryKeys.settings.all,
     queryFn: () => fetchJson<SystemSettings>('/api/admin/settings'),
+  });
+}
+
+/**
+ * Fetch full admin settings (systems + SAML configs).
+ */
+export function useAdminSettings() {
+  return useQuery<AdminSettingsResponse, ApiError>({
+    queryKey: queryKeys.settings.all,
+    queryFn: () => fetchJson<AdminSettingsResponse>('/api/admin/settings'),
   });
 }
 
@@ -144,6 +225,24 @@ export function useUpdateSettings() {
       }),
     onSuccess: (data) => {
       queryClient.setQueryData(queryKeys.settings.all, data);
+    },
+  });
+}
+
+/**
+ * Mutation to update admin settings (system and/or SAML configs).
+ */
+export function useUpdateAdminSettings() {
+  const queryClient = useQueryClient();
+
+  return useMutation<{ data: Record<string, unknown> }, ApiError, UpdateSettingsPayload>({
+    mutationFn: (body) =>
+      fetchJson<{ data: Record<string, unknown> }>('/api/admin/settings', {
+        method: 'PUT',
+        body: JSON.stringify(body),
+      }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.settings.all });
     },
   });
 }
