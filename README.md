@@ -24,6 +24,7 @@
   <img src="https://img.shields.io/badge/PostgreSQL-16-4169E1?logo=postgresql&logoColor=white" alt="PostgreSQL 16" />
   <img src="https://img.shields.io/badge/Redis-7-DC382D?logo=redis&logoColor=white" alt="Redis 7" />
   <img src="https://img.shields.io/badge/Docker-Compose-2496ED?logo=docker&logoColor=white" alt="Docker Compose" />
+  <img src="https://img.shields.io/badge/Tests-698_passing-brightgreen?logo=vitest" alt="698 Tests Passing" />
   <img src="https://img.shields.io/badge/License-MIT-green" alt="MIT License" />
 </p>
 
