@@ -150,7 +150,7 @@ Chronicall (Xima) and TASKE are the standard reporting platforms for Avaya IP Of
 <p align="center">
   <img src="docs/screenshots/admin.png" alt="Admin — System settings with DevLink3, SMDR, and SAML SSO configuration" width="900" />
 </p>
-<p align="center"><em>Two-column settings layout with DevLink3/SMDR connection config and full SAML SSO management — attribute mapping, group-to-role mapping, and SP metadata</em></p>
+<p align="center"><em>DevLink3/SMDR connection config and full SAML SSO management — attribute mapping, group-to-role mapping, and SP metadata</em></p>
 
 ---
 
