@@ -1,7 +1,3 @@
-<p align="center">
-  <img src="docs/screenshots/calldoc-logo.png" alt="CallDoc Logo" width="280" />
-</p>
-
 <h1 align="center">CallDoc</h1>
 
 <p align="center">
