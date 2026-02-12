@@ -122,7 +122,7 @@ Chronicall (Xima) and TASKE are the standard reporting platforms for Avaya IP Of
 ### Agent Timeline
 <!-- Screenshot: Agent timeline Gantt chart showing state changes -->
 <p align="center">
-  <img src="docs/screenshots/agent-timeline.png" alt="Agent Timeline — Gantt-chart view of agent state changes" width="900" />
+  <img src="docs/screenshots/timeline.png" alt="Agent Timeline — Gantt-chart view of agent state changes" width="900" />
 </p>
 <p align="center"><em>Agent state timeline with color-coded segments — idle, talking, hold, ACW, DND, and away states</em></p>
 
@@ -153,13 +153,6 @@ Chronicall (Xima) and TASKE are the standard reporting platforms for Avaya IP Of
   <img src="docs/screenshots/admin.png" alt="Admin — User management, settings, and alert rules" width="900" />
 </p>
 <p align="center"><em>Administration panel with user management, system settings, alert rules, and audit log</em></p>
-
-### Dark Theme
-<!-- Screenshot: Full app in dark mode -->
-<p align="center">
-  <img src="docs/screenshots/dark-theme.png" alt="Dark Theme — zinc-950 base with indigo accent" width="900" />
-</p>
-<p align="center"><em>Dark-first design with zinc-950 base, Indigo-500 accent, and high-contrast typography</em></p>
 
 ---
 
